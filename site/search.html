@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Land Record Workbench · Search</title><link rel="stylesheet" href="style.css"></head><body>
+<main class="view">
+  <div class="tools"><input id="q" placeholder="Search Khasra, Khewat, owner or area…" autofocus>
+    <select id="st"><option value="">All statuses</option><option value="auto_accepted">auto-accepted</option><option value="needs_review">needs review</option><option value="edited">edited</option><option value="verified">verified</option><option value="rejected">rejected</option></select>
+    <span class="muted small" id="count" style="align-self:center"></span></div>
+  <div class="tbl panel"><table><thead><tr><th>Khewat</th><th>Khasra</th><th>Owner</th><th>Area (K-M-S)</th><th>Ledger m²</th><th>GIS m²</th><th>Village</th><th>Conf.</th><th>Status</th></tr></thead><tbody id="rows"></tbody></table>
+  <p id="none" class="muted" hidden>No matching records.</p></div>
+</main>
+<script src="common.js"></script>
+<script>
+boot("search", () => {
+  const f = (x) => (x == null ? "–" : Math.round(x).toLocaleString());
+  const draw = () => {
+    const q = $("#q").value.trim().toLowerCase(), st = $("#st").value;
+    const hit = Store.doc.records.filter((r) => (!st || r.status === st) && (!q || [r.khewat, r.khasra, r.owner, r.area_raw].some((v) => (v || "").toLowerCase().includes(q))));
+    $("#count").textContent = `${hit.length} of ${Store.doc.records.length}`; $("#none").hidden = hit.length > 0;
+    $("#rows").replaceChildren(...hit.map((r) => el("tr", { class: "link", onclick: () => (location.href = "review.html?rid=" + r.id) },
+      el("td", {}, r.khewat), el("td", {}, r.khasra), el("td", {}, r.owner), el("td", {}, r.area_raw), el("td", {}, f(r.area_m2)),
+      el("td", {}, f(r.parcel?.area_m2)), el("td", {}, r.parcel?.village ?? "–"), el("td", {}, pct(r.c_joint)), el("td", {}, el("span", { class: "badge " + r.status }, label(r.status))))));
+  };
+  $("#q").oninput = draw; $("#st").onchange = draw; draw();
+});
+</script></body></html>

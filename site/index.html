@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Land Record Workbench · Dashboard</title><link rel="stylesheet" href="style.css"></head><body>
+<main class="view">
+  <section class="cards" id="cards"></section>
+  <section class="panel wide"><h2>Record status</h2><div class="stack" id="stack"></div><div class="legend" id="leg"></div></section>
+  <section class="panel wide"><h2>Needs attention</h2><table><thead><tr><th>Khasra</th><th>Owner</th><th>Why</th><th>Conf.</th><th></th></tr></thead><tbody id="todo"></tbody></table><p id="todoEmpty" class="muted" hidden>All rows resolved.</p></section>
+  <section class="panel wide"><h2>Hard examples <span class="muted small">(reviewer corrections kept as training signal)</span></h2>
+    <table><thead><tr><th>Time</th><th>Field</th><th>OCR read</th><th>Corrected to</th><th>OCR conf.</th></tr></thead><tbody id="hard"></tbody></table>
+    <p id="hardEmpty" class="muted">No corrections yet. Edit a field in <a href="review.html">Review</a> and save.</p></section>
+  <section class="panel wide"><h2>How scoring works</h2><p class="small">Visual confidence <b>c<sub>v</sub></b> is the geometric mean of the OCR word confidences in a row. Semantic confidence <b>c<sub>s</sub></b> is the weighted pass rate of the validation rules (a failed hard rule sets it to 0). Joint confidence is <b>C = c<sub>v</sub><sup>α</sup> · c<sub>s</sub><sup>1-α</sup></b> (α = 0.5). A row is auto-accepted only if C ≥ 0.80 and no rule scores below 0.5; everything else goes to a person.</p></section>
+</main>
+<script src="common.js"></script>
+<script>
+boot("dash", () => {
+  const s = Store.stats();
+  const cards = [["Records", s.records], ["Auto-accept rate", pct(s.auto)], ["Mean visual c_v", s.cv?.toFixed(2)], ["Mean semantic c_s", s.cs?.toFixed(2)], ["Mean joint C", s.cj?.toFixed(2)], ["Corrections logged", s.corrections]];
+  $("#cards").replaceChildren(...cards.map(([k, v]) => el("div", { class: "stat" }, el("b", {}, v ?? "–"), el("span", {}, k))));
+  $("#stack").replaceChildren(...Object.entries(s.by).map(([k, n]) => el("i", { style: `width:${n / s.records * 100}%;background:${colour(k)}`, title: `${label(k)}: ${n}` })));
+  $("#leg").replaceChildren(...Object.entries(s.by).map(([k, n]) => el("span", {}, el("i", { class: "dot", style: "background:" + colour(k) }), `${label(k)} ${n}`)));
+  const todo = Store.doc.records.filter((r) => r.status === "needs_review");
+  $("#todoEmpty").hidden = todo.length > 0;
+  $("#todo").replaceChildren(...todo.map((r) => {
+    const bad = r.rules.filter((x) => x.score < 1).map((x) => x.name).join("; ");
+    return el("tr", {}, el("td", {}, r.khasra), el("td", {}, r.owner), el("td", {}, bad), el("td", {}, pct(r.c_joint)), el("td", {}, el("a", { href: "review.html?rid=" + r.id }, "Review →")));
+  }));
+  $("#hardEmpty").hidden = Store.corrections.length > 0;
+  $("#hard").replaceChildren(...Store.corrections.map((h) => el("tr", {}, el("td", {}, new Date(h.ts).toLocaleString()), el("td", {}, h.field), el("td", {}, h.old_value), el("td", {}, h.new_value), el("td", {}, pct(h.field_conf)))));
+});
+</script></body></html>

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Land Record Workbench</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div class="brand">
+    <h1>Land Record Workbench</h1>
+    <span class="sub">SIH 26018 prototype · digitize, validate, review</span>
+  </div>
+  <nav>
+    <button class="tab active" data-tab="review">Review</button>
+    <button class="tab" data-tab="dash">Dashboard</button>
+  </nav>
+  <div class="actions">
+    <span id="engine" class="pill">checking OCR…</span>
+    <button id="sampleBtn" class="btn">Try sample scan</button>
+    <label class="btn primary">Upload scan<input id="fileIn" type="file" accept=".png,.jpg,.jpeg,.tif,.tiff,.bmp,.pdf" hidden></label>
+  </div>
+</header>
+
+<div id="toast" class="toast" hidden></div>
+
+<main id="review" class="view">
+  <aside class="docs">
+    <h2>Documents</h2>
+    <ul id="docList"></ul>
+    <p id="docEmpty" class="muted">No documents yet. Try the sample scan or upload one.</p>
+  </aside>
+
+  <section class="scan">
+    <div class="scanbar">
+      <div class="seg">
+        <button id="vProcessed" class="active">Processed</button>
+        <button id="vOriginal">Deskewed original</button>
+      </div>
+      <div class="legend">
+        <span><i class="dot ok"></i>auto-accepted</span>
+        <span><i class="dot warn"></i>needs review</span>
+        <span><i class="dot done"></i>verified / edited</span>
+        <span><i class="dot bad"></i>rejected</span>
+      </div>
+    </div>
+    <div class="canvaswrap"><canvas id="scan"></canvas><p id="scanEmpty" class="muted center">The scan appears here with each extracted row outlined by status.</p></div>
+    <div id="metrics" class="metrics"></div>
+  </section>
+
+  <section class="side">
+    <div class="filter">
+      <label><input type="checkbox" id="onlyReview"> Show only rows needing review</label>
+    </div>
+    <div id="records"></div>
+    <div class="panel">
+      <h2>Parcel map</h2>
+      <svg id="map" viewBox="0 0 400 260" preserveAspectRatio="xMidYMid meet"></svg>
+      <p class="muted small">Synthetic cadastral polygons. The selected record's Khasra is highlighted.</p>
+    </div>
+  </section>
+</main>
+
+<main id="dash" class="view" hidden>
+  <section class="cards" id="statCards"></section>
+  <section class="panel wide">
+    <h2>Hard examples <span class="muted small">(reviewer corrections kept as training signal)</span></h2>
+    <table id="hardTable"><thead><tr><th>Time</th><th>Doc</th><th>Field</th><th>OCR read</th><th>Corrected to</th><th>OCR conf.</th></tr></thead><tbody></tbody></table>
+    <p id="hardEmpty" class="muted">No corrections yet. Edit a field in the Review tab and save.</p>
+  </section>
+  <section class="panel wide">
+    <h2>How scoring works</h2>
+    <p class="small">Visual confidence <b>c<sub>v</sub></b> is the geometric mean of the OCR word confidences in the row. Semantic confidence <b>c<sub>s</sub></b> is the weighted pass rate of the validation rules (a failed hard rule sets it to 0). Joint confidence is <b>C = c<sub>v</sub><sup>α</sup> · c<sub>s</sub><sup>1-α</sup></b>. A row is auto-accepted only if C ≥ <span id="thr">0.80</span> and no rule scores below 0.5; everything else goes to a person.</p>
+  </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

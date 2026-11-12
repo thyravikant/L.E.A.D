@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Land Record Workbench · Review</title><link rel="stylesheet" href="style.css"></head><body>
+<main id="review" class="view">
+  <section class="scan">
+    <div class="scanbar">
+      <div class="seg"><button id="vP" class="active">Processed</button><button id="vO">Deskewed original</button></div>
+      <div class="legend"><span><i class="dot ok"></i>auto-accepted</span><span><i class="dot warn"></i>needs review</span><span><i class="dot done"></i>verified / edited</span><span><i class="dot bad"></i>rejected</span></div>
+    </div>
+    <div class="canvaswrap"><canvas id="scan"></canvas></div>
+    <div id="metrics" class="metrics"></div>
+  </section>
+  <section class="side">
+    <div class="filter"><label><input type="checkbox" id="onlyReview"> Show only rows needing review</label></div>
+    <div id="records"></div>
+    <div class="panel"><h2>Parcel map</h2><svg id="map" viewBox="0 0 400 260" preserveAspectRatio="xMidYMid meet"></svg>
+      <p class="muted small">Synthetic cadastral polygons. The selected record's Khasra is highlighted.</p></div>
+  </section>
+</main>
+<script src="common.js"></script><script src="review.js"></script></body></html>

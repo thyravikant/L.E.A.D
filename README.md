@@ -1,6 +1,7 @@
 # 🌾 L.E.A.D — Land Extraction, Analysis & Digitization
 ### Intelligent Land Record Digitization, GIS Cross-Verification & Human-in-the-Loop Review Platform
 
+[![Live Demo on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=flat&logo=vercel)](https://vercel.com)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688.svg)](https://fastapi.tiangolo.com/)
 [![OpenCV](https://img.shields.io/badge/Image%20Processing-OpenCV-5C3EE8.svg)](https://opencv.org/)
@@ -186,13 +187,15 @@ python -m pytest -v
 
 ---
 
-## 🌐 Deploying the Static Demo
+## 🌐 Live Demo & Deployment
 
-The `site/` folder contains a client-side version with precomputed OCR results and localStorage persistence:
+The static interactive preview (`site/`) is live and ready to run without backend dependencies (client-side verification with precomputed OCR results & local storage):
 
-- **GitHub Pages**: Automated via `.github/workflows/pages.yml`. Enable Pages in repository settings pointing to GitHub Actions.
-- **Firebase Hosting**: Run `firebase deploy --only hosting`.
-- **Vercel**: Import project and set root directory to `site`.
+- **Vercel**: Deployed directly from the repository with Root Directory configured to `site/`.
+- **GitHub Pages**: Automated via `.github/workflows/pages.yml`.
+- **Firebase Hosting**: Configured via `firebase.json` (`firebase deploy --only hosting`).
+
+> 💡 **Full Features vs. Static Demo**: The live Vercel showcase demonstrates record review, inline discrepancy corrections, interactive parcel search, and re-validation in the browser. Uploading custom unread scans and generating new OCR models runs via the local FastAPI backend (`python run.py`).
 
 ---
 

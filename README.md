@@ -1,7 +1,7 @@
 # 🌾 L.E.A.D — Land Extraction, Analysis & Digitization
 ### Intelligent Land Record Digitization, GIS Cross-Verification & Human-in-the-Loop Review Platform
 
-[![Live Demo on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=flat&logo=vercel)](https://vercel.com)
+[![Live Demo on Vercel](https://img.shields.io/badge/Live%20Demo-lead--land--records.vercel.app-black?style=flat&logo=vercel)](https://lead-land-records.vercel.app/)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688.svg)](https://fastapi.tiangolo.com/)
 [![OpenCV](https://img.shields.io/badge/Image%20Processing-OpenCV-5C3EE8.svg)](https://opencv.org/)
@@ -189,9 +189,11 @@ python -m pytest -v
 
 ## 🌐 Live Demo & Deployment
 
+🚀 **Live Showcase**: **[lead-land-records.vercel.app](https://lead-land-records.vercel.app/)**
+
 The static interactive preview (`site/`) is live and ready to run without backend dependencies (client-side verification with precomputed OCR results & local storage):
 
-- **Vercel**: Deployed directly from the repository with Root Directory configured to `site/`.
+- **Vercel**: Deployed at [lead-land-records.vercel.app](https://lead-land-records.vercel.app/) with Root Directory set to `site/`.
 - **GitHub Pages**: Automated via `.github/workflows/pages.yml`.
 - **Firebase Hosting**: Configured via `firebase.json` (`firebase deploy --only hosting`).
 

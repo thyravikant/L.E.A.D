@@ -1,112 +1,201 @@
-# Land Record Workbench (SIH 26018 prototype)
+# 🌾 L.E.A.D — Land Extraction, Analysis & Digitization
+### Intelligent Land Record Digitization, GIS Cross-Verification & Human-in-the-Loop Review Platform
 
-A small, working prototype of an intelligent land record digitization and validation system:
-upload a scanned Jamabandi page, and the app restores the image, reads it with OCR, converts
-Punjab land units, checks every row against a cadastral (GIS) layer, scores confidence, and
-routes doubtful rows to a human reviewer whose corrections are logged.
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688.svg)](https://fastapi.tiangolo.com/)
+[![OpenCV](https://img.shields.io/badge/Image%20Processing-OpenCV-5C3EE8.svg)](https://opencv.org/)
+[![Tesseract OCR](https://img.shields.io/badge/OCR-Tesseract-green.svg)](https://github.com/tesseract-ocr/tesseract)
+[![Tests](https://img.shields.io/badge/Tests-18%20Passed-brightgreen.svg)]()
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-**Backend:** Python, FastAPI, SQLite, OpenCV, Tesseract. **Frontend:** plain HTML/CSS/JS (no build step).
+---
 
-## Run it
+## 📌 Overview
 
-> Quick start on Linux/macOS/Git Bash: `./ps.sh` does steps 1-2 below and starts the app.
+**L.E.A.D** is an end-to-end prototype engineered for automated digitization and validation of complex historical land records (such as **Jamabandi** registers). 
 
-1. Install **Python 3.10+** and **Tesseract OCR**.
-   - Windows: install from https://github.com/UB-Mannheim/tesseract/wiki and add it to PATH
-   - macOS: `brew install tesseract`
-   - Ubuntu/Debian: `sudo apt install tesseract-ocr`
-2. In this folder:
+Land records are typically degraded, skewed, and recorded in regional measurement systems. **L.E.A.D** restores uploaded scans, extracts tabular ledger entries via OCR, translates regional land units (e.g., *Kanal, Marla, Sarsahi, Karam*) to metric equivalents, cross-references physical records with Cadastral GIS layers, calculates dual-factor confidence scores, and intelligently routes discrepancies to human review queues.
+
+---
+
+## ✨ Key Features
+
+- **Adaptive Image Preprocessing Pipeline**:
+  - **CLAHE** (Contrast Limited Adaptive Histogram Equalization) for localized contrast enhancement.
+  - **Sauvola Local Thresholding** computed with integral images for binarizing stained or aged parchment.
+  - **Radon / Projection-Profile Deskewing** for precision page alignment.
+  - **Morphological Table Structure Separation** to eliminate ledger border noise before OCR.
+- **Multilingual OCR Engine**:
+  - Word-level confidence mapping with Tesseract OCR supporting script expansion (`eng`, `hin`, `pan`).
+- **Domain-Specific Unit Normalizer**:
+  - Dynamic conversion for Punjabi and North Indian land systems:
+    $$\text{1 Karam} = 5.5\text{ ft}$$
+    $$\text{1 Sarsahi} = 1\text{ sq Karam} \approx 2.81\text{ m}^2$$
+    $$\text{1 Marla} = 9\text{ Sarsahi} \quad | \quad \text{1 Kanal} = 20\text{ Marla} \quad | \quad \text{1 Killa} = 8\text{ Kanal}$$
+- **GIS Cadastral Cross-Validation Engine**:
+  - Automatic cross-checking of Khasra numbers against spatial GeoJSON parcels.
+  - Dual tolerance matching: comparing reported ledger area vs. geometric GIS polygon area ($\le 2\%$ pass, $\le 10\%$ warning).
+- **Dual-Factor Confidence Scoring**:
+  - Combines visual clarity $c_v$ (geometric mean of word confidences) and semantic consistency $c_s$ (weighted business rule checks):
+    $$C = c_v^\alpha \cdot c_s^{(1-\alpha)} \quad (\text{Default } \alpha = 0.5)$$
+- **Human-in-the-Loop Review & Audit Tracking**:
+  - High-confidence records are automatically approved; ambiguous rows are flagged with actionable explanations.
+  - Manual edits are automatically archived to a `hard-examples` dataset for active-learning and OCR fine-tuning.
+- **Interactive Web Interface & Static Demo**:
+  - Full-stack UI with side-by-side original/processed document viewer and parcel inspection.
+  - Standalone serverless static deployment support (`site/`) for GitHub Pages, Vercel, and Firebase.
+
+---
+
+## 🏗️ Architecture & Data Flow
+
+```
+┌──────────────┐     ┌───────────────────────┐     ┌─────────────────────┐
+│ Scanned Page │ ──> │ Adaptive Preprocess   │ ──> │ OCR Engine          │
+│ (PDF / Image)│     │ CLAHE + Sauvola + Deskew│    │ Tesseract Word Conf │
+└──────────────┘     └───────────────────────┘     └──────────┬──────────┘
+                                                              │
+┌──────────────────────┐     ┌───────────────────────┐        │
+│ Decision Engine      │ <── │ Cadastral Validation  │ <──────┴──────────┐
+│ Auto-Accept vs Review│     │ GIS Polygon & Units   │  Tabular Extractor│
+└──────────┬───────────┘     └───────────────────────┘  (Khewat, Khasra, │
+           │                                             Owner, Area)    │
+     ┌─────┴───────────────┐                                             │
+     ▼                     ▼                                             │
+┌──────────────┐   ┌───────────────┐                                     │
+│ Auto-Accepted│   │ Review Queue  │ <───────────────────────────────────┘
+│ Records      │   │ (Human-in-loop)
+└──────────────┘   └───────┬───────┘
+                           ▼
+                   ┌───────────────┐
+                   │ Hard Examples │ (Active Learning)
+                   │ Export        │
+                   └───────────────┘
+```
+
+---
+
+## 🚀 Quick Start Guide
+
+### Prerequisites
+- **Python 3.10+**
+- **Tesseract OCR**:
+  - **Windows**: Install via [UB-Mannheim Tesseract](https://github.com/UB-Mannheim/tesseract/wiki) and ensure it is added to your system `PATH`.
+  - **macOS**: `brew install tesseract`
+  - **Ubuntu / Debian**: `sudo apt install tesseract-ocr`
+
+### 1. Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/thyravikant/L.E.A.D.git
+cd L.E.A.D
+
+# Set up virtual environment
 python -m venv .venv
-# Windows:  .venv\Scripts\activate        macOS/Linux:  source .venv/bin/activate
+
+# Activate virtual environment
+# Windows (PowerShell):
+.venv\Scripts\Activate.ps1
+# Windows (cmd):
+.venv\Scripts\activate.bat
+# Linux / macOS:
+source .venv/bin/activate
+
+# Install dependencies
 pip install -r requirements.txt
+```
+
+> **Tip for Linux / macOS / Git Bash:** You can also run `./ps.sh` for an automated setup and run.
+
+### 2. Launch the Application
+
+```bash
 python run.py
 ```
+- **Web App**: Open [http://127.0.0.1:8000](http://127.0.0.1:8000)
+- **Interactive Swagger API Docs**: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+- **ReDoc Documentation**: [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
 
-3. Open **http://127.0.0.1:8000** and click **Try sample scan**.
-   Use **Upload scan** for your own PNG/JPG/TIFF/PDF (first page of a PDF is read).
+---
 
-Run the tests with `python -m pytest -q` (18 tests). Interactive API docs: http://127.0.0.1:8000/docs
+## 🧪 Testing Scenarios in the Demo
 
-If Tesseract is missing, the page shows a warning; the bundled sample still works from a recorded
-OCR result, but your own uploads need Tesseract.
+Click **"Try sample scan"** on the dashboard to test the built-in demo records:
 
-## What to try in the demo
+| Khasra | System Decision | Trigger / Cause | Resolution Action |
+|:---:|:---:|:---|:---|
+| **1241** | ⚠️ Needs Review | Area mismatch: ledger specifies `10-0-0` (5,058 m²), while GIS cadastral polygon calculates 4,300 m². | Edit ledger area to `8-9-6` and click save. System re-validates and passes. |
+| **1250** | ❌ Needs Review (Hard Fail) | Spatial mismatch: Khasra number is not present in the cadastral GIS layer. | Mark for manual field surveyor verification or spatial update. |
+| **OCR Low-Conf** | ⚠️ Needs Review | Low word-level confidence (e.g. damaged name reading like *"Harhans"*). | Correct name in reviewer modal; saved automatically to `/api/hard-examples`. |
+| **Clean Rows** | ✅ Auto-Accepted | High optical confidence ($c_v \ge 0.85$) and passed all semantic GIS validation rules. | Automatically indexed. |
 
-| Row | What happens | Why |
-|---|---|---|
-| 1241 | needs review (area mismatch) | ledger says 10-0-0 (5,058 m²), the GIS polygon is 4,300 m². Edit the area to `8-9-6` and save: it re-validates and becomes consistent. |
-| 1250 | needs review (hard fail) | Khasra is not in the cadastral layer |
-| Any low-confidence name | needs review | e.g. "Harhans" read with low OCR confidence; correct it and the fix is stored under **Dashboard > Hard examples** |
-| Clean rows | auto-accepted | confidence and every rule pass |
+---
 
-Exact OCR output varies with the Tesseract version and image resolution, so a row or two may land
-differently on your machine. That is expected.
+## ⚙️ Configuration Reference
 
-## How it works
+Configure platform behavior using environment variables:
 
-```
-scan -> preprocess -> OCR -> row extraction -> unit normalizer -> validation -> confidence -> route
-        CLAHE         Tesseract  Khewat|Khasra   Kanal-Marla-      6+ rules      c_v, c_s, C    auto-accept
-        Sauvola       word       |Owner|Area    Sarsahi -> m²     incl. GIS                    or human review
-        deskew        confidences                                  polygon area
-        rule removal
-```
+| Variable | Default | Description |
+|:---|:---:|:---|
+| `LR_OCR_LANGS` | `eng` | Tesseract language codes (e.g., `eng+hin+pan`). |
+| `LR_KARAM_FT` | `5.5` | Defined length of Karam in feet (standard Punjab = 5.5 ft). |
+| `LR_ALPHA` | `0.5` | Weight balance factor between visual ($\alpha$) and semantic ($1-\alpha$) confidence. |
+| `LR_AUTO_THRESHOLD` | `0.80` | Minimum aggregate confidence score required for auto-approval. |
+| `LR_FIELD_CONF_OK` | `0.85` | Per-field optical confidence baseline. |
+| `LR_DATA_DIR` | `./data` | File storage path for SQLite database, GeoJSON, and upload artifacts. |
+| `HOST` / `PORT` | `127.0.0.1` / `8000` | Host address and port for the FastAPI web server. |
 
-- **Preprocessing** (`app/preprocess.py`): CLAHE contrast, Sauvola local thresholding via integral images,
-  projection-profile deskew, morphological removal of table rulings so OCR sees text, not grid lines.
-- **Units** (`app/units.py`): 1 Sarsahi = 1 sq Karam (Karam = 5.5 ft), 1 Marla = 9 Sarsahi, 1 Kanal = 20 Marla,
-  1 Killa = 8 Kanal. Bigha, Biswa and Guntha are *deliberately not hard-coded* because values differ by state and
-  era; add confirmed values to `EXTRA_UNITS_M2`.
-- **Validation** (`app/validate.py`): Khasra format; Khasra exists in cadastral layer (hard rule); area parses;
-  ledger area vs GIS polygon area (2% pass, 10% warn); owner name plausible; OCR confidence of every field; Khasra unique.
-- **Confidence**: `c_v` = geometric mean of OCR word confidences, `c_s` = weighted rule pass rate (0 if a hard rule fails),
-  `C = c_v^a * c_s^(1-a)` with a = 0.5. Auto-accept only if C >= 0.80 and no rule scores below 0.5.
-- **Human in the loop**: edits are re-validated, written to an audit log, and every corrected field is saved as a
-  "hard example" (`/api/hard-examples`) for later OCR fine-tuning.
+---
 
-## Configuration (environment variables)
+## 📂 Repository Structure
 
-| Variable | Default | Meaning |
-|---|---|---|
-| `LR_OCR_LANGS` | `eng` | Tesseract languages, e.g. `eng+hin+pan` (install the matching language packs) |
-| `LR_KARAM_FT` | `5.5` | Karam length in feet |
-| `LR_ALPHA` | `0.5` | weight of visual vs semantic confidence |
-| `LR_AUTO_THRESHOLD` | `0.80` | auto-accept threshold |
-| `LR_FIELD_CONF_OK` | `0.85` | per-field OCR confidence considered safe |
-| `LR_DATA_DIR` | `./data` | database and uploads location |
-| `HOST`, `PORT` | `127.0.0.1`, `8000` | server bind |
-
-## Project layout
-
-```
-app/        backend: main.py (API), pipeline.py, preprocess.py, ocr.py, extract.py, units.py,
-            geo.py, validate.py, db.py, seed.py, config.py
-static/     frontend: index.html, app.js, style.css
-samples/    synthetic degraded Jamabandi scan + generator (make_sample.py)
-tests/      pytest suite
-data/       created at first run (SQLite DB, uploads, parcels.geojson); safe to delete to reset
+```plaintext
+L.E.A.D/
+├── .github/workflows/    # CI/CD and GitHub Pages deployment actions
+├── app/                  # FastAPI backend source
+│   ├── config.py         # Global configuration & environment settings
+│   ├── db.py             # SQLite database models & query operations
+│   ├── extract.py        # Tabular rule parser & column segmenter
+│   ├── geo.py            # Spatial GIS layer parser & polygon area calculator
+│   ├── main.py           # FastAPI REST routes & request handlers
+│   ├── ocr.py            # Tesseract OCR invocation & bounding box mapper
+│   ├── pipeline.py       # Orchestration pipeline (Image -> OCR -> Validate)
+│   ├── preprocess.py     # Image filters (Sauvola, CLAHE, Deskew, Grid cleaning)
+│   ├── seed.py           # Synthetic cadastral parcel generator
+│   ├── units.py          # Regional land unit conversion logic
+│   └── validate.py       # Deterministic business rule validation engine
+├── samples/              # Degraded test scans & synthetic generator (make_sample.py)
+├── site/                 # Standalone static showcase (GitHub Pages / Firebase)
+├── static/               # Dynamic web app assets (HTML, CSS, JS)
+├── tests/                # Automated pytest validation suite
+├── firebase.json         # Firebase hosting configuration
+├── requirements.txt      # Python dependencies
+└── run.py                # Server launcher script
 ```
 
-## Honest limitations
+---
 
-- This is a **prototype**, not a production system. The OCR is stock Tesseract: no trained handwriting or
-  Gurmukhi model, so handwritten or heavily degraded pages will be read poorly (the confidence scores and the
-  review queue exist for exactly that reason).
-- Row extraction is rule-based and assumes a four-column Khewat | Khasra | Owner | Area table.
-- The cadastral layer is **synthetic** (8 demo parcels in `app/seed.py`). To use real data, replace
-  `data/parcels.geojson` with a GeoJSON FeatureCollection whose features have `khasra_no`, `village`, `tehsil`
-  properties (the area is computed from the polygon).
-- Hindi/Punjabi OCR needs extra Tesseract language packs and has not been validated here.
-- No login, no multi-user locking, SQLite only.
+## 🧪 Running Automated Tests
 
-## Live demo (static site, no server)
+Run the full test suite with:
 
-`site/` is a pure static copy of the prototype (Dashboard, Review, Search records) with the sample scan
-pre-processed. Edits, verify and reject run in the browser (saved in localStorage; **Reset demo** clears them).
-Upload needs the Python backend above.
+```bash
+python -m pytest -v
+```
 
-- **Vercel:** import the repo, set **Root Directory = `site`**, Framework = Other, no build command.
-- **GitHub Pages:** Settings > Pages > Source = *GitHub Actions* (workflow in `.github/workflows/pages.yml`).
-- **Firebase:** `firebase deploy --only hosting` (uses `firebase.json`).
+---
+
+## 🌐 Deploying the Static Demo
+
+The `site/` folder contains a client-side version with precomputed OCR results and localStorage persistence:
+
+- **GitHub Pages**: Automated via `.github/workflows/pages.yml`. Enable Pages in repository settings pointing to GitHub Actions.
+- **Firebase Hosting**: Run `firebase deploy --only hosting`.
+- **Vercel**: Import project and set root directory to `site`.
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.

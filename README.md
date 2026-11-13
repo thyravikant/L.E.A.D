@@ -9,13 +9,12 @@
 ![Tesseract](https://img.shields.io/badge/OCR-Tesseract-green)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-| | |
-|---|---|
 
-| **Problem Statement ID** | SIH 26018 |
-| **Live demo** | https://lead-land-records.vercel.app/ |
 
----
+**Problem Statement ID**: SIH 26018 
+
+ **Live demo**:  https://lead-land-records.vercel.app/
+
 
 ## 📑 Contents
 

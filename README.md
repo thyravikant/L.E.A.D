@@ -1,4 +1,5 @@
-# 🌾 L.E.A.D — Land Extraction, Analysis & Digitization
+# 🌾 L.E.A.D — Land Evaluation, Authentication & Digitization
+
 ### Intelligent Land Record Digitization, GIS Cross-Verification & Human-in-the-Loop Review Platform
 
 [![Live Demo on Vercel](https://img.shields.io/badge/Live%20Demo-lead--land--records.vercel.app-black?style=flat&logo=vercel)](https://lead-land-records.vercel.app/)

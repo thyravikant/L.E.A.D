@@ -1,0 +1,850 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Land Record Digitization | PS 26018</title>
+<meta name="description" content="Proposal for an AI-powered Intelligent Land Record Digitization and Validation System (Problem Statement 26018, Ministry of Rural Development, DoLR).">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Kalam:wght@400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4EFE5; --paper-2:#ECE4D3; --card:#FFFCF6;
+    --ink:#1E2523; --ink-2:#47504C; --muted:#767B75; --line:#DCD2BF;
+    --green:#2E5B4E; --green-soft:#DDE8E2;
+    --terra:#AD4E28; --terra-soft:#F4DFD2;
+    --ochre:#94691A; --ochre-soft:#F3E7C9;
+    --grid:rgba(46,91,78,.07);
+    --ledger:#FBF5E6; --ledger-ink:#2B3A67; --ledger-rule:rgba(43,58,103,.14); --ledger-margin:rgba(173,78,40,.35);
+    --shadow:0 1px 2px rgba(30,37,35,.06),0 10px 28px rgba(30,37,35,.07);
+    color-scheme:light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#131816; --paper-2:#1B221F; --card:#1E2724;
+      --ink:#ECE6DA; --ink-2:#C3BDB0; --muted:#8F958F; --line:#2E3935;
+      --green:#86C0AB; --green-soft:#20342E;
+      --terra:#E5926B; --terra-soft:#3A2A22;
+      --ochre:#DDB869; --ochre-soft:#352E1D;
+      --grid:rgba(134,192,171,.06);
+      --ledger:#2A2620; --ledger-ink:#E3D9C2; --ledger-rule:rgba(227,217,194,.12); --ledger-margin:rgba(229,146,107,.35);
+      --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px rgba(0,0,0,.3);
+      color-scheme:dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#131816; --paper-2:#1B221F; --card:#1E2724;
+    --ink:#ECE6DA; --ink-2:#C3BDB0; --muted:#8F958F; --line:#2E3935;
+    --green:#86C0AB; --green-soft:#20342E;
+    --terra:#E5926B; --terra-soft:#3A2A22;
+    --ochre:#DDB869; --ochre-soft:#352E1D;
+    --grid:rgba(134,192,171,.06);
+    --ledger:#2A2620; --ledger-ink:#E3D9C2; --ledger-rule:rgba(227,217,194,.12); --ledger-margin:rgba(229,146,107,.35);
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 28px rgba(0,0,0,.3);
+    color-scheme:dark;
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+  @media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}}
+  body{margin:0;background:var(--paper);color:var(--ink);font:400 16px/1.6 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;overflow-x:hidden}
+  h1,h2,h3{font-family:"Fraunces",Georgia,serif;font-weight:600;line-height:1.15;margin:0;letter-spacing:-.01em}
+  a{color:var(--green)}
+  code,.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace}
+  code{font-size:.88em;background:var(--paper-2);padding:1px 6px;border-radius:4px}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 16px}
+  @media (min-width:720px){.wrap{padding:0 28px}}
+
+  /* ---------- Top bar ---------- */
+  .topbar{position:sticky;top:0;z-index:20;background:var(--paper);background:color-mix(in srgb,var(--paper) 90%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .topbar .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:6px 20px;padding-top:10px;padding-bottom:8px}
+  .brand{display:flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none;font-weight:600;font-size:15px;white-space:nowrap}
+  .brand svg{width:26px;height:26px;color:var(--green);flex:none}
+  .brand small{font:500 11px "IBM Plex Mono",monospace;color:var(--muted);letter-spacing:.04em}
+  .nav{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;flex:1 1 100%;min-width:0;margin:0 -6px}
+  .nav::-webkit-scrollbar{display:none}
+  .nav a{font-size:13.5px;padding:6px 10px;border-radius:999px;color:var(--ink-2);text-decoration:none;white-space:nowrap}
+  .nav a:hover,.nav a[aria-current="true"]{background:var(--green-soft);color:var(--green)}
+  .nav a.demo-pill{background:var(--terra);color:var(--paper);font-weight:600;margin-left:6px}
+  .nav a.demo-pill:hover{opacity:0.9}
+  @media (min-width:1000px){
+    .topbar .wrap{flex-wrap:nowrap;padding-top:0;padding-bottom:0;height:60px}
+    .nav{flex:1 1 auto;justify-content:flex-end;margin:0}
+  }
+  section[id]{scroll-margin-top:100px}
+  @media (min-width:1000px){section[id]{scroll-margin-top:70px}}
+
+  /* ---------- Hero ---------- */
+  .hero{padding:44px 0 56px;border-bottom:1px solid var(--line);
+    background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+    background-size:32px 32px}
+  .hero-grid{display:grid;gap:40px;align-items:center}
+  @media (min-width:900px){.hero{padding:84px 0 88px}.hero-grid{grid-template-columns:1.1fr .9fr;gap:56px}}
+  .eyebrow{font:500 12px/1.5 "IBM Plex Mono",monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--terra)}
+  .hero h1{font-size:clamp(2.05rem,5.4vw,3.5rem);margin:14px 0 18px}
+  .hero h1 em{font-style:italic;color:var(--green)}
+  .lede{font-size:clamp(1rem,1.6vw,1.15rem);color:var(--ink-2);max-width:56ch;margin:0}
+  .cta{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border-radius:8px;font-weight:600;font-size:15px;text-decoration:none;border:1px solid transparent}
+  .btn-primary{background:var(--green);color:var(--paper)}
+  .btn-ghost{background:var(--card);border-color:var(--line);color:var(--ink)}
+  .btn-accent{background:var(--terra);color:var(--paper)}
+  .facts{display:flex;flex-wrap:wrap;gap:6px 20px;margin-top:28px;font-size:13.5px;color:var(--muted)}
+  .facts b{color:var(--ink);font-weight:600}
+
+  .specimen{width:100%;max-width:440px;margin:0 auto}
+  .ledger{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:6px;padding:30px 18px 14px 46px;transform:rotate(-1.4deg);box-shadow:var(--shadow);
+    background-color:var(--ledger);
+    background-image:linear-gradient(90deg,transparent 32px,var(--ledger-margin) 32px,var(--ledger-margin) 33px,transparent 33px),
+      repeating-linear-gradient(to bottom,transparent 0,transparent 33px,var(--ledger-rule) 33px,var(--ledger-rule) 34px);
+    background-position:0 0,0 30px}
+  .ledger p{margin:0;font-family:"Kalam","Noto Sans Devanagari",cursive;font-size:19px;line-height:34px;color:var(--ledger-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ledger .tag{position:absolute;top:8px;right:12px;font:500 10.5px "IBM Plex Mono",monospace;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+  .scan{position:absolute;left:0;right:0;height:44px;top:-48px;border-bottom:2px solid var(--green);
+    background:linear-gradient(to bottom,transparent,rgba(46,91,78,.18));animation:scan 3.8s ease-in-out infinite}
+  @keyframes scan{0%{top:-48px}65%{top:100%}100%{top:100%}}
+  @media (prefers-reduced-motion: reduce){.scan{display:none}}
+  .flow{display:flex;align-items:center;justify-content:center;gap:10px;margin:16px 0;font:500 11.5px "IBM Plex Mono",monospace;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+  .flow svg{width:16px;height:16px;color:var(--terra)}
+  .extract{background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);overflow:hidden}
+  .extract-head{display:flex;justify-content:space-between;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);font:500 11px "IBM Plex Mono",monospace;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .row{display:grid;grid-template-columns:78px minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 14px;border-bottom:1px dashed var(--line);font-size:14px}
+  .row:last-child{border-bottom:0}
+  .row .k{font:500 11px "IBM Plex Mono",monospace;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+  .row .v{font-weight:500;overflow-wrap:anywhere}
+  .row.flag{background:var(--terra-soft)}
+  .chip{font:500 12px "IBM Plex Mono",monospace;padding:2px 8px;border-radius:999px;white-space:nowrap}
+  .c-hi{background:var(--green-soft);color:var(--green)}
+  .c-mid{background:var(--ochre-soft);color:var(--ochre)}
+  .c-lo{background:var(--terra);color:var(--paper)}
+  .caption{margin:10px 0 0;font-size:12px;color:var(--muted);text-align:center}
+
+  /* ---------- Sections ---------- */
+  section.block{padding:56px 0;border-bottom:1px solid var(--line)}
+  @media (min-width:720px){section.block{padding:84px 0}}
+  section.alt{background:var(--paper-2)}
+  .sec-head{max-width:740px;margin-bottom:30px}
+  .kicker{font:500 12px "IBM Plex Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--terra);margin-bottom:10px}
+  .sec-head h2{font-size:clamp(1.6rem,3.4vw,2.4rem)}
+  .sec-head p{color:var(--ink-2);margin:12px 0 0;font-size:1.05rem}
+  .sub{font-size:1.25rem;margin:40px 0 14px}
+
+  .grid{display:grid;gap:14px}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))}
+  .g4{grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr))}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px}
+  .card h3{font-size:1.12rem;margin-bottom:6px}
+  .card p{margin:0;color:var(--ink-2);font-size:15px}
+  .num{display:block;font:500 12px "IBM Plex Mono",monospace;color:var(--terra);margin-bottom:10px}
+  .callout{margin-top:18px;padding:16px 20px;border-left:3px solid var(--terra);background:var(--terra-soft);border-radius:0 8px 8px 0}
+  .callout p{margin:0}
+
+  .caps{list-style:none;margin:0;padding:0;display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))}
+  .caps li{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px;font-size:15px}
+  .caps .i{font:500 12px "IBM Plex Mono",monospace;color:var(--green);background:var(--green-soft);border-radius:6px;padding:2px 7px;flex:none;margin-top:2px}
+
+  /* ---------- Tables ---------- */
+  .table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+  table{width:100%;border-collapse:collapse;min-width:620px;font-size:14.5px}
+  th,td{text-align:left;padding:12px 16px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font:500 11.5px "IBM Plex Mono",monospace;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);background:var(--paper-2)}
+  tbody tr:last-child td{border-bottom:0}
+  td:first-child{font-weight:600}
+  td{color:var(--ink-2)} td:first-child{color:var(--ink)}
+
+  /* ---------- Pipeline ---------- */
+  .pipeline{list-style:none;margin:0;padding:0;display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))}
+  .step{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px}
+  .step .n{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--green);color:var(--paper);font:600 12.5px "IBM Plex Mono",monospace;margin-bottom:12px}
+  .step.review .n{background:var(--terra)}
+  .step h3{font-size:1.05rem;margin-bottom:6px}
+  .step p{margin:0 0 12px;color:var(--ink-2);font-size:14.5px}
+  .tools{display:flex;flex-wrap:wrap;gap:6px}
+  .tools span{font:500 11.5px "IBM Plex Mono",monospace;padding:3px 8px;border:1px solid var(--line);border-radius:999px;color:var(--ink-2);background:var(--paper)}
+
+  /* ---------- Phases ---------- */
+  .stages{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+  .stage{font:500 12px "IBM Plex Mono",monospace;padding:5px 10px;border-radius:999px}
+  .t-found{background:var(--green-soft);color:var(--green)}
+  .t-core{background:var(--terra-soft);color:var(--terra)}
+  .t-plat{background:var(--ochre-soft);color:var(--ochre)}
+  .t-scale{background:var(--card);color:var(--ink-2);border:1px solid var(--line)}
+  .phase{background:var(--card);border:1px solid var(--line);border-radius:10px;margin-bottom:10px;overflow:hidden}
+  .phase summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;padding:16px 18px}
+  .phase summary::-webkit-details-marker{display:none}
+  .phase summary::after{content:"+";font:400 22px/1 "IBM Plex Mono",monospace;color:var(--muted);transition:transform .2s}
+  .phase[open] summary::after{transform:rotate(45deg)}
+  .ph-num{font:600 13px "IBM Plex Mono",monospace;color:var(--muted)}
+  .ph-title{font-family:"Fraunces",Georgia,serif;font-size:1.1rem;font-weight:600;display:block}
+  .ph-meta{display:inline-block;margin-top:4px;font:500 11px "IBM Plex Mono",monospace;padding:2px 8px;border-radius:999px}
+  .ph-body{border-top:1px dashed var(--line);padding:14px 18px 18px}
+  .ph-body .goal{margin:0 0 10px;color:var(--ink)}
+  .ph-body ul{margin:0 0 14px;padding-left:20px;color:var(--ink-2)}
+  .ph-body li{margin:5px 0}
+  .deliv{margin:0;font-size:14px;padding:10px 12px;background:var(--paper-2);border-radius:6px}
+
+  /* ---------- Architecture ---------- */
+  .arch{display:grid;gap:6px}
+  .layer{display:grid;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  @media (min-width:760px){.layer{grid-template-columns:190px 1fr;align-items:center}}
+  .layer-label{font:500 12px "IBM Plex Mono",monospace;text-transform:uppercase;letter-spacing:.06em;color:var(--terra)}
+  .layer-label small{display:block;font:400 12.5px "IBM Plex Sans",sans-serif;text-transform:none;letter-spacing:0;color:var(--muted);margin-top:2px}
+  .boxes{display:flex;flex-wrap:wrap;gap:8px}
+  .box{padding:7px 12px;border-radius:6px;background:var(--paper-2);border:1px solid var(--line);font-size:14px;font-weight:500}
+  .arrow{text-align:center;color:var(--muted);font:500 13px "IBM Plex Mono",monospace;line-height:1.2}
+
+  /* ---------- Validation ---------- */
+  .formula{margin:12px 0;padding:14px;background:var(--paper-2);border-radius:8px;font:500 14px/1.6 "IBM Plex Mono",monospace;white-space:pre-wrap;overflow-wrap:anywhere;color:var(--ink)}
+  .terms{margin:0;padding-left:18px;color:var(--ink-2);font-size:14.5px}
+  .terms li{margin:4px 0}
+  .thresh{display:flex;height:12px;border-radius:999px;overflow:hidden;margin:16px 0 12px}
+  .thresh span:nth-child(1){flex:70;background:var(--terra)}
+  .thresh span:nth-child(2){flex:20;background:var(--ochre)}
+  .thresh span:nth-child(3){flex:10;background:var(--green)}
+  .legend{list-style:none;margin:0;padding:0;font-size:14.5px;color:var(--ink-2)}
+  .legend li{display:flex;gap:10px;align-items:baseline;margin:6px 0}
+  .legend b{font:600 13px "IBM Plex Mono",monospace;color:var(--ink);white-space:nowrap}
+  .dot{width:10px;height:10px;border-radius:50%;flex:none;transform:translateY(1px)}
+  .note{font-size:12.5px;color:var(--muted);margin:10px 0 0}
+  .checks{margin:0;padding-left:18px;color:var(--ink-2);font-size:14.5px}
+  .checks li{margin:6px 0}
+  .checks b{color:var(--ink)}
+  .loop{list-style:none;padding:0;margin:0;display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr))}
+  .loop li{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .loop .i{display:block;font:500 11.5px "IBM Plex Mono",monospace;color:var(--terra);margin-bottom:4px}
+  .loop b{display:block;font-family:"Fraunces",Georgia,serif;font-size:1.02rem;margin-bottom:4px}
+  .loop span:last-child{font-size:13.5px;color:var(--ink-2)}
+
+  /* ---------- APIs ---------- */
+  .endpoints{border:1px solid var(--line);border-radius:10px;background:var(--card);overflow:hidden}
+  .ep{display:grid;grid-template-columns:62px minmax(0,1fr);gap:4px 12px;padding:12px 16px;border-bottom:1px solid var(--line);align-items:baseline}
+  .ep:last-child{border-bottom:0}
+  .method{font:600 11px "IBM Plex Mono",monospace;padding:3px 0;text-align:center;border-radius:4px}
+  .m-get{background:var(--green-soft);color:var(--green)}
+  .m-post{background:var(--ochre-soft);color:var(--ochre)}
+  .m-patch{background:var(--terra-soft);color:var(--terra)}
+  .path{font:500 13.5px "IBM Plex Mono",monospace;overflow-wrap:anywhere}
+  .ep .d{grid-column:2;color:var(--ink-2);font-size:14px}
+  @media (min-width:760px){.ep{grid-template-columns:62px minmax(0,1.15fr) minmax(0,1fr)}.ep .d{grid-column:auto}}
+
+  /* ---------- KPI / stack / chips ---------- */
+  .kpi .label{font:500 11.5px "IBM Plex Mono",monospace;text-transform:uppercase;letter-spacing:.05em;color:var(--green);margin-bottom:8px;display:block}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chips span{font-size:14px;padding:6px 12px;border-radius:999px;background:var(--card);border:1px solid var(--line)}
+
+  /* ---------- Footer ---------- */
+  footer{padding:44px 0 56px;background:var(--paper-2)}
+  .ps-meta{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));margin:0}
+  .ps-meta dt{font:500 11px "IBM Plex Mono",monospace;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .ps-meta dd{margin:2px 0 0;font-weight:500}
+  .fine{margin:28px 0 0;font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="#top">
+      <svg viewBox="0 0 28 28" aria-hidden="true"><rect x="1.5" y="1.5" width="25" height="25" rx="4" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M1.5 11.5 12 9l2 17.5M12 9l4-7.5M12 9l14.5 6" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="9" r="2.4" fill="#AD4E28"/></svg>
+      <span>Land Record AI <small>PS 26018</small></span>
+    </a>
+    <nav class="nav" aria-label="Sections">
+      <a href="#problem">Problem</a>
+      <a href="#solution">Solution</a>
+      <a href="#pipeline">Pipeline</a>
+      <a href="#phases">Phases</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#validation">Validation</a>
+      <a href="#security">Security</a>
+      <a href="#apis">APIs</a>
+      <a href="#dashboard">Dashboard</a>
+      <a href="#stack">Tech stack</a>
+      <a href="#evaluation">Evaluation</a>
+      <a href="#risks">Risks</a>
+      <a href="#impact">Impact</a>
+      <a class="demo-pill" href="workbench.html">⚡ Live Workbench</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- ================= HERO ================= -->
+<div class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="eyebrow">Problem Statement 26018 · Ministry of Rural Development · DoLR</div>
+      <h1>Turning handwritten land registers into <em>verified</em> digital records.</h1>
+      <p class="lede">An AI-powered Intelligent Land Record Digitization and Validation System. It reads scanned records in multiple Indian languages, extracts structured fields, validates them against rules and master databases, and sends only the uncertain values to a human reviewer.</p>
+      <div class="cta">
+        <a class="btn btn-accent" href="workbench.html">Open Live Workbench →</a>
+        <a class="btn btn-primary" href="#pipeline">See how it works</a>
+        <a class="btn btn-ghost" href="#phases">Project phases</a>
+      </div>
+      <div class="facts">
+        <span><b>Category</b> Software</span>
+        <span><b>Theme</b> Smart Automation</span>
+        <span><b>Department</b> Land Resources</span>
+      </div>
+    </div>
+
+    <div class="specimen" aria-label="Illustration: a handwritten record converted into structured fields with confidence scores">
+      <div class="ledger">
+        <span class="tag">Scanned register</span>
+        <div class="scan" aria-hidden="true"></div>
+        <p>खसरा सं० २१४/३ &nbsp; खाता सं० ००८७</p>
+        <p>ग्राम – रामपुर, तहसील – सदर</p>
+        <p>रकबा ०.४१२ हे०</p>
+        <p>सुरेश कुमार पुत्र रामलाल</p>
+      </div>
+      <div class="flow">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v11M3.5 8.5 8 13l4.5-4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        OCR · Extraction · Validation
+      </div>
+      <div class="extract">
+        <div class="extract-head"><span>Structured record</span><span>Confidence</span></div>
+        <div class="row"><span class="k">Khasra</span><span class="v">214/3</span><span class="chip c-hi">0.97</span></div>
+        <div class="row"><span class="k">Khata</span><span class="v">0087</span><span class="chip c-hi">0.95</span></div>
+        <div class="row"><span class="k">Village</span><span class="v">Rampur</span><span class="chip c-hi">0.92</span></div>
+        <div class="row"><span class="k">Tehsil</span><span class="v">Sadar</span><span class="chip c-hi">0.90</span></div>
+        <div class="row"><span class="k">Area</span><span class="v">0.412 ha</span><span class="chip c-mid">0.86</span></div>
+        <div class="row flag"><span class="k">Owner</span><span class="v">Suresh Kumar s/o Ramlal</span><span class="chip c-lo">Review</span></div>
+      </div>
+      <p class="caption">Illustrative example with a fictional record</p>
+    </div>
+  </div>
+</div>
+
+<!-- ================= PROBLEM ================= -->
+<section class="block" id="problem">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">01 · The problem</div>
+      <h2>Why manual digitization breaks down</h2>
+      <p>Land records underpin ownership, taxation, acquisition, dispute resolution and infrastructure planning. Much of India's historical record still sits in handwritten registers, scanned files, cadastral maps and legacy PDFs held at different administrative levels.</p>
+    </div>
+    <div class="grid g4">
+      <div class="card"><span class="num">Quality</span><h3>Degraded documents</h3><p>Poor scans, faded ink, damaged pages and handwritten annotations defeat ordinary OCR.</p></div>
+      <div class="card"><span class="num">Format</span><h3>No common layout</h3><p>Every state and era uses different registers, columns, units and terminology.</p></div>
+      <div class="card"><span class="num">Language</span><h3>Many scripts</h3><p>Records are written in multiple regional languages, scripts and numeral systems.</p></div>
+      <div class="card"><span class="num">Cost</span><h3>Slow manual entry</h3><p>Manual typing is expensive, time-consuming and introduces inconsistencies.</p></div>
+    </div>
+    <div class="callout"><p><strong>The result:</strong> unreliable databases, slow ownership verification, poor integration with modern land information systems, and weaker citizen services.</p></div>
+  </div>
+</section>
+
+<!-- ================= SOLUTION ================= -->
+<section class="block alt" id="solution">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">02 · What the system delivers</div>
+      <h2>An end-to-end platform, not just an OCR tool</h2>
+      <p>The system automates digitization and validation while keeping humans in control of every uncertain value. It covers all the capabilities expected in the problem statement.</p>
+    </div>
+    <ul class="caps">
+      <li><span class="i">01</span>Multilingual recognition of printed and handwritten text across major Indian languages</li>
+      <li><span class="i">02</span>Automatic extraction from scanned PDFs, images and historical documents</li>
+      <li><span class="i">03</span>Intelligent classification of text into predefined land-record fields</li>
+      <li><span class="i">04</span>Automated validation with business rules, cross-database checks and duplicate detection</li>
+      <li><span class="i">05</span>Per-field confidence scores with automatic flagging of uncertain fields</li>
+      <li><span class="i">06</span>Human-assisted verification workflow for low-confidence records</li>
+      <li><span class="i">07</span>Learning loop that improves extraction accuracy from every correction</li>
+      <li><span class="i">08</span>Integration with LRMS, DILRMP databases, GIS platforms and cadastral maps</li>
+      <li><span class="i">09</span>Secure document repository with metadata management and audit trails</li>
+      <li><span class="i">10</span>Interactive dashboards for progress, accuracy and pending work</li>
+      <li><span class="i">11</span>APIs for government applications and digital governance platforms</li>
+      <li><span class="i">12</span>Role-based access control for sensitive land-record data</li>
+    </ul>
+
+    <h3 class="sub">Fields extracted from every record</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Field</th><th>What it captures</th><th>Example validation</th></tr></thead>
+        <tbody>
+          <tr><td>Landowner details</td><td>Name, parentage, share in holding</td><td>Name transliteration; consistent with mutation history</td></tr>
+          <tr><td>Survey number</td><td>Survey or plot identifier</td><td>Matches the state's format, e.g. <code>214/3</code></td></tr>
+          <tr><td>Khasra number</td><td>Plot number on the village map</td><td>Exists in the village cadastral index</td></tr>
+          <tr><td>Khata number</td><td>Holding or account number</td><td>Links all plots of one holding</td></tr>
+          <tr><td>Plot area</td><td>Area with its unit</td><td>Unit conversion (bigha, kanal, marla, acre, hectare); shares add up to total</td></tr>
+          <tr><td>Village / Tehsil / District</td><td>Administrative location</td><td>Valid hierarchy against master data such as LGD codes</td></tr>
+          <tr><td>Land classification</td><td>Agricultural, residential, government, etc.</td><td>Value from a controlled vocabulary</td></tr>
+          <tr><td>Ownership details</td><td>Ownership type, rights and shares</td><td>Shares total 100%</td></tr>
+          <tr><td>Mutation records</td><td>Transfers, order numbers, dates</td><td>Chronological order; previous owner matches</td></tr>
+          <tr><td>Registration information</td><td>Deed number, date, registry office</td><td>Valid date and registry office code</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PIPELINE ================= -->
+<section class="block" id="pipeline">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">03 · How it works</div>
+      <h2>A nine-stage processing pipeline</h2>
+      <p>Each stage is an independent service, so it can be improved, replaced or scaled on its own without touching the rest.</p>
+    </div>
+    <ol class="pipeline">
+      <li class="step"><span class="n">1</span><h3>Upload</h3><p>Single files or bulk batches, tagged with state, district, record type and year.</p><div class="tools"><span>PDF</span><span>JPG / PNG / TIFF</span></div></li>
+      <li class="step"><span class="n">2</span><h3>Preprocessing</h3><p>Deskew, denoise, binarize, enhance contrast and detect page borders.</p><div class="tools"><span>OpenCV</span></div></li>
+      <li class="step"><span class="n">3</span><h3>Layout analysis</h3><p>Find tables, field cells, stamps, signatures and map regions.</p><div class="tools"><span>YOLO</span><span>Detectron2</span></div></li>
+      <li class="step"><span class="n">4</span><h3>OCR</h3><p>Identify script per region, then read printed and handwritten text with the best engine for that script.</p><div class="tools"><span>Multilingual OCR</span><span>Transformers</span></div></li>
+      <li class="step"><span class="n">5</span><h3>Field extraction</h3><p>Map text to the field schema; normalize numerals, names and units.</p><div class="tools"><span>spaCy</span><span>Indic NLP</span><span>Hugging Face</span></div></li>
+      <li class="step"><span class="n">6</span><h3>Validation</h3><p>Business rules, master-data cross-checks and duplicate detection.</p><div class="tools"><span>Rule engine</span><span>PostgreSQL</span></div></li>
+      <li class="step"><span class="n">7</span><h3>Confidence scoring</h3><p>Score every field and route anything below threshold to review.</p><div class="tools"><span>Calibrated model</span></div></li>
+      <li class="step review"><span class="n">8</span><h3>Human review</h3><p>Verifiers see the scan beside the fields and correct only what is flagged.</p><div class="tools"><span>Review UI</span><span>Audit log</span></div></li>
+      <li class="step"><span class="n">9</span><h3>Publish</h3><p>Store, sync with LRMS / DILRMP, link to GIS parcels and update dashboards.</p><div class="tools"><span>APIs</span><span>PostGIS</span><span>GeoServer</span></div></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ================= PHASES ================= -->
+<section class="block alt" id="phases">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">04 · Execution plan</div>
+      <h2>Ten phases from study to scale-up</h2>
+      <p>The work is grouped into four stages. Phases 4 to 6 form the technical core; phases 7 and 8 can run in parallel with them.</p>
+    </div>
+    <div class="stages">
+      <span class="stage t-found">Foundation · 1–3</span>
+      <span class="stage t-core">Core AI · 4–6</span>
+      <span class="stage t-plat">Platform · 7–8</span>
+      <span class="stage t-scale">Validate &amp; scale · 9–10</span>
+    </div>
+
+    <details class="phase" open>
+      <summary><span class="ph-num">01</span><span><span class="ph-title">Study &amp; requirement analysis</span><span class="ph-meta t-found">Foundation</span></span></summary>
+      <div class="ph-body">
+        <p class="goal">Understand the current manual process and fix exactly what the system must extract and how success will be measured.</p>
+        <ul>
+          <li>Map the existing manual digitization workflow and where errors, delays and rework occur.</li>
+          <li>Catalogue record types (khasra/khatauni, khata/jamabandi, mutation registers, cadastral maps, registration deeds) and their state-wise variations.</li>
+          <li>Identify stakeholder needs: revenue departments, land record offices, survey departments, district administration, state and central ministries, citizens.</li>
+          <li>Freeze the target field schema and the business rules attached to each field.</li>
+          <li>Define success metrics: field accuracy, CER/WER, auto-approval rate and processing time per document.</li>
+        </ul>
+        <p class="deliv"><strong>Deliverable:</strong> Requirements specification, field schema and evaluation criteria.</p>
+      </div>
+    </details>
+
+    <details class="phase">
+      <summary><span class="ph-num">02</span><span><span class="ph-title">Data strategy &amp; preparation</span><span class="ph-meta t-found">Foundation</span></span></summary>
+      <div class="ph-body">
+        <p class="goal">Build a representative, labeled dataset that reflects real-world degradation.</p>
+        <ul>
+          <li>Collect samples from public state land-record portals and DILRMP-linked sources; request official sample registers through the department.</li>
+          <li>Generate synthetic records for missing layouts and scripts using regional fonts and handwriting styles.</li>
+          <li>Augment with realistic damage: fading, blur, skew, stains, folds, bleed-through and torn edges.</li>
+          <li>Annotate field values and bounding boxes using written annotation guidelines.</li>
+          <li>Split into training, validation and a locked test set, stratified by state, language and record type.</li>
+          <li>Start with priority languages (e.g. Hindi, Punjabi, Marathi, Tamil) in a design that can add more.</li>
+        </ul>
+        <p class="deliv"><strong>Deliverable:</strong> Annotated dataset, synthetic data generator and locked test set.</p>
+      </div>
+    </details>
+
+    <details class="phase">
+      <summary><span class="ph-num">03</span><span><span class="ph-title">Architecture &amp; system design</span><span class="ph-meta t-found">Foundation</span></span></summary>
+      <div class="ph-body">
+        <p class="goal">Design a modular, API-first platform so every stage can be built and improved independently.</p>
+        <ul>
+          <li>Define the service-based pipeline with a job queue for asynchronous batch processing.</li>
+          <li>Design the PostgreSQL + PostGIS schema for documents, records, fields, confidence, corrections and audit events.</li>
+          <li>Specify REST/GraphQL contracts for upload, status, results, verification and integration.</li>
+          <li>Define roles and permissions: uploader, verifier, supervisor, administrator, auditor, API client.</li>
+          <li>Wireframe the upload portal, review screen, audit log and dashboard.</li>
+          <li>Plan containerized deployment on NIC Cloud (MeghRaj) or an equivalent government cloud.</li>
+        </ul>
+        <p class="deliv"><strong>Deliverable:</strong> Architecture document, database schema, API specification and UI wireframes.</p>
+      </div>
+    </details>
+
+    <details class="phase">
+      <summary><span class="ph-num">04</span><span><span class="ph-title">Document processing pipeline</span><span class="ph-meta t-core">Core AI</span></span></summary>
+      <div class="ph-body">
+        <p class="goal">Convert raw scans into clean text mapped to the land-record fields.</p>
+        <ul>
+          <li><strong>Preprocessing (OpenCV):</strong> deskew, denoise, binarize, enhance contrast, detect page borders.</li>
+          <li><strong>Layout analysis (YOLO / Detectron2):</strong> locate tables, field cells, stamps, signatures and map regions.</li>
+          <li><strong>Script identification</strong> for each text region before OCR.</li>
+          <li><strong>OCR:</strong> benchmark engines per script for printed and handwritten text, then fine-tune on land-record vocabulary.</li>
+          <li><strong>Field extraction:</strong> NER plus rule-based mapping with spaCy, Hugging Face Transformers and the Indic NLP Library.</li>
+          <li><strong>Normalization:</strong> regional numerals to standard digits, name transliteration, unit conversion.</li>
+        </ul>
+        <p class="deliv"><strong>Deliverable:</strong> Working extraction pipeline that outputs a structured JSON record per document.</p>
+      </div>
+    </details>
+
+    <details class="phase">
+      <summary><span class="ph-num">05</span><span><span class="ph-title">Validation &amp; confidence engine</span><span class="ph-meta t-core">Core AI</span></span></summary>
+      <div class="ph-body">
+        <p class="goal">Decide automatically which values can be trusted and which need a human.</p>
+        <ul>
+          <li>Business rules: identifier formats, unit consistency, shares totalling 100%, valid dates and mutation chronology.</li>
+          <li>Hierarchy check of village → tehsil → district against master data.</li>
+          <li>Cross-database verification against existing LRMS / DILRMP records where available.</li>
+          <li>Duplicate and conflict detection when the same parcel or owner appears with different values.</li>
+          <li>Per-field confidence combining OCR confidence, rule results, model agreement and database match, calibrated on the validation set.</li>
+          <li>Threshold routing: auto-accept, highlight for review, or mandatory review.</li>
+        </ul>
+        <p class="deliv"><strong>Deliverable:</strong> Rule engine, calibrated confidence model and routing logic.</p>
+      </div>
+    </details>
+
+    <details class="phase">
+      <summary><span class="ph-num">06</span><span><span class="ph-title">Human verification &amp; continuous learning</span><span class="ph-meta t-core">Core AI</span></span></summary>
+      <div class="ph-body">
+        <p class="goal">Involve humans only where needed and learn from every correction.</p>
+        <ul>
+          <li>Review interface with the original scan beside the extracted fields; each flagged field is linked to its image region.</li>
+          <li>Fast keyboard-driven correction, accept/reject per field and a reason for each rejection.</li>
+          <li>Every correction logged with reviewer, timestamp and before/after values.</li>
+          <li>Corrections become new training data for periodic fine-tuning with versioned models.</li>
+          <li>Active learning to prioritize the most informative uncertain samples.</li>
+          <li>Track accuracy and review load over time to show the system improving.</li>
+        </ul>
+        <p class="deliv"><strong>Deliverable:</strong> Verification workflow and retraining loop with model versioning.</p>
+      </div>
+    </details>
+
+    <details class="phase">
+      <summary><span class="ph-num">07</span><span><span class="ph-title">Repository, security &amp; integration</span><span class="ph-meta t-plat">Platform</span></span></summary>
+      <div class="ph-body">
+        <p class="goal">Store records securely and connect them to existing government systems.</p>
+        <ul>
+          <li>Original scans in object storage; extracted records in PostgreSQL with metadata (source office, record type, year, language).</li>
+          <li>Role-based access control, encryption in transit and at rest, secure authentication.</li>
+          <li>Append-only audit trail of every view, edit, approval and export.</li>
+          <li>REST/GraphQL APIs with adapter layers for state LRMS and DILRMP databases.</li>
+          <li>GIS integration with GeoServer and OpenLayers/Leaflet to link validated parcels to cadastral maps.</li>
+        </ul>
+        <p class="deliv"><strong>Deliverable:</strong> Secured repository, integration APIs and GIS linkage.</p>
+      </div>
+    </details>
+
+    <details class="phase">
+      <summary><span class="ph-num">08</span><span><span class="ph-title">Dashboards &amp; monitoring</span><span class="ph-meta t-plat">Platform</span></span></summary>
+      <div class="ph-body">
+        <p class="goal">Give administrators a live view of digitization progress and quality.</p>
+        <ul>
+          <li>Documents processed, extraction accuracy, validation status, pending verifications and error statistics.</li>
+          <li>State-wise and district-wise progress with drill-down to tehsil and village.</li>
+          <li>Built on Apache Superset, Grafana or Plotly.</li>
+          <li>SMS, email and push alerts for backlogs, failures and missed service levels.</li>
+        </ul>
+        <p class="deliv"><strong>Deliverable:</strong> Monitoring dashboard with alerting.</p>
+      </div>
+    </details>
+
+    <details class="phase">
+      <summary><span class="ph-num">09</span><span><span class="ph-title">Testing &amp; evaluation</span><span class="ph-meta t-scale">Validate &amp; scale</span></span></summary>
+      <div class="ph-body">
+        <p class="goal">Prove accuracy, speed and robustness with honest numbers.</p>
+        <ul>
+          <li>Report field-level and per-language accuracy on the locked test set.</li>
+          <li>Benchmark against manual data entry for time per record and error rate.</li>
+          <li>Stress-test faded, damaged and handwritten records, and document known limitations.</li>
+          <li>Load-test the pipeline and security-test the APIs and access control.</li>
+          <li>User acceptance testing with representative verifiers.</li>
+        </ul>
+        <p class="deliv"><strong>Deliverable:</strong> Evaluation report with metrics and limitations.</p>
+      </div>
+    </details>
+
+    <details class="phase">
+      <summary><span class="ph-num">10</span><span><span class="ph-title">Deployment &amp; scale-up</span><span class="ph-meta t-scale">Validate &amp; scale</span></span></summary>
+      <div class="ph-body">
+        <p class="goal">Move from a pilot to statewide and national rollout.</p>
+        <ul>
+          <li>Pilot in one tehsil or district with a defined backlog of records.</li>
+          <li>Horizontal scaling of OCR workers behind a queue, with pooled GPUs for inference.</li>
+          <li>Configurable templates to onboard new states, formats and languages without code changes.</li>
+          <li>Training material and handbooks for verifiers and administrators.</li>
+          <li>Ongoing monitoring, a retraining schedule and a support plan.</li>
+        </ul>
+        <p class="deliv"><strong>Deliverable:</strong> Pilot results, rollout plan and operations handbook.</p>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ================= ARCHITECTURE ================= -->
+<section class="block" id="architecture">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">05 · System architecture</div>
+      <h2>Layered, API-first and cloud-ready</h2>
+      <p>Clear separation between the user interfaces, the processing services, the data layer and external systems keeps the platform secure and easy to scale.</p>
+    </div>
+    <div class="arch">
+      <div class="layer"><div class="layer-label">Presentation<small>Web, mobile-responsive</small></div><div class="boxes"><span class="box">Upload portal</span><span class="box">Verification UI</span><span class="box">Dashboards</span><span class="box">Audit viewer</span><span class="box">Admin console</span></div></div>
+      <div class="arrow" aria-hidden="true">↓ ↑</div>
+      <div class="layer"><div class="layer-label">Access<small>Single entry point</small></div><div class="boxes"><span class="box">API gateway (REST / GraphQL)</span><span class="box">Authentication</span><span class="box">RBAC</span><span class="box">Rate limiting</span></div></div>
+      <div class="arrow" aria-hidden="true">↓ ↑</div>
+      <div class="layer"><div class="layer-label">Processing<small>Queue-driven services</small></div><div class="boxes"><span class="box">Job queue</span><span class="box">Preprocessing</span><span class="box">Layout detection</span><span class="box">OCR workers</span><span class="box">Field extraction</span><span class="box">Validation</span><span class="box">Confidence</span><span class="box">Retraining</span></div></div>
+      <div class="arrow" aria-hidden="true">↓ ↑</div>
+      <div class="layer"><div class="layer-label">Data<small>Government cloud</small></div><div class="boxes"><span class="box">PostgreSQL + PostGIS</span><span class="box">Object storage (scans)</span><span class="box">Audit log</span><span class="box">Model registry</span><span class="box">Search index</span></div></div>
+      <div class="arrow" aria-hidden="true">↓ ↑</div>
+      <div class="layer"><div class="layer-label">Integration<small>External systems</small></div><div class="boxes"><span class="box">State LRMS</span><span class="box">DILRMP</span><span class="box">GeoServer / cadastral maps</span><span class="box">Master data (LGD)</span><span class="box">SMS / email</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= VALIDATION ================= -->
+<section class="block alt" id="validation">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">06 · Trust, but verify</div>
+      <h2>Validation, confidence and the human loop</h2>
+      <p>The goal is not zero human effort. It is human effort spent only on the fields that actually need it.</p>
+    </div>
+    <div class="grid g2">
+      <div class="card">
+        <h3>Per-field confidence score</h3>
+        <div class="formula">C(field) = w₁·OCR + w₂·Rules + w₃·Agreement + w₄·DBMatch</div>
+        <ul class="terms">
+          <li><b>OCR</b>: recognition confidence for the characters</li>
+          <li><b>Rules</b>: how many business rules the value passes</li>
+          <li><b>Agreement</b>: whether independent models produce the same value</li>
+          <li><b>DBMatch</b>: whether master or existing records confirm it</li>
+        </ul>
+        <div class="thresh" aria-hidden="true"><span></span><span></span><span></span></div>
+        <ul class="legend">
+          <li><span class="dot" style="background:var(--green)"></span><b>≥ 0.90</b> Auto-accepted; spot-checked by random sampling</li>
+          <li><span class="dot" style="background:var(--ochre)"></span><b>0.70–0.90</b> Field highlighted for quick review</li>
+          <li><span class="dot" style="background:var(--terra)"></span><b>&lt; 0.70</b> Mandatory full review</li>
+        </ul>
+        <p class="note">Weights and thresholds are illustrative and will be tuned on the validation set.</p>
+      </div>
+      <div class="card">
+        <h3>Validation checks</h3>
+        <ul class="checks">
+          <li><b>Format rules:</b> survey, khasra and khata numbers match state patterns.</li>
+          <li><b>Unit consistency:</b> areas convert correctly and owner shares add up to the plot total.</li>
+          <li><b>Location hierarchy:</b> the village belongs to the tehsil, and the tehsil to the district.</li>
+          <li><b>Chronology:</b> mutation dates are in order, and each transfer starts from the previous owner.</li>
+          <li><b>Cross-database match:</b> values agree with LRMS / DILRMP records where they exist.</li>
+          <li><b>Duplicates and conflicts:</b> the same parcel or owner with different values is flagged.</li>
+          <li><b>Controlled vocabulary:</b> land classes and ownership types come from approved lists.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 class="sub">Human-in-the-loop learning cycle</h3>
+    <ol class="loop">
+      <li><span class="i">Step 1</span><b>Flag</b><span>Low-confidence fields enter the review queue.</span></li>
+      <li><span class="i">Step 2</span><b>Review</b><span>The verifier sees the scan region beside the value.</span></li>
+      <li><span class="i">Step 3</span><b>Correct</b><span>The value is fixed or confirmed with a reason.</span></li>
+      <li><span class="i">Step 4</span><b>Log</b><span>The change is stored in the audit trail and the training set.</span></li>
+      <li><span class="i">Step 5</span><b>Retrain</b><span>Models are fine-tuned and versioned, so fewer fields get flagged next time.</span></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ================= SECURITY ================= -->
+<section class="block" id="security">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">07 · Security &amp; access</div>
+      <h2>Sensitive records, strictly controlled</h2>
+      <p>Land records contain personal and ownership data. Every user sees and does only what their role allows, and every action is recorded.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Role</th><th>Can</th><th>Cannot</th></tr></thead>
+        <tbody>
+          <tr><td>Uploader</td><td>Upload documents, add metadata, track status</td><td>Edit or approve records</td></tr>
+          <tr><td>Verifier</td><td>Review flagged fields, correct values, approve records</td><td>Change rules or manage users</td></tr>
+          <tr><td>Supervisor</td><td>Assign work, resolve escalations, view district dashboards</td><td>Alter audit logs</td></tr>
+          <tr><td>Administrator</td><td>Manage users, roles, validation rules and thresholds</td><td>Alter or delete audit logs</td></tr>
+          <tr><td>Auditor</td><td>Read-only access to records and the full audit trail</td><td>Modify any data</td></tr>
+          <tr><td>API client</td><td>Scoped read/write through issued tokens</td><td>Access data outside its scope</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="grid g3" style="margin-top:14px">
+      <div class="card"><h3>Authentication</h3><p>Secure login with OTP or government SSO, and multi-factor authentication for administrators.</p></div>
+      <div class="card"><h3>Encryption</h3><p>TLS for data in transit and strong encryption for stored scans and records.</p></div>
+      <div class="card"><h3>Audit trail</h3><p>An append-only log of every view, edit, approval and export.</p></div>
+      <div class="card"><h3>Data masking</h3><p>Personal details are masked in views and exports according to role.</p></div>
+      <div class="card"><h3>Sovereign hosting</h3><p>Deployment on NIC Cloud (MeghRaj) or an approved government cloud.</p></div>
+      <div class="card"><h3>Compliance</h3><p>Aligned with Government of India cybersecurity guidelines and the Digital Personal Data Protection Act, 2023.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= APIS ================= -->
+<section class="block alt" id="apis">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">08 · Integration</div>
+      <h2>APIs for government systems</h2>
+      <p>A versioned API lets LRMS, DILRMP, GIS platforms and other departments push documents in and pull validated records out.</p>
+    </div>
+    <div class="endpoints">
+      <div class="ep"><span class="method m-post">POST</span><span class="path">/api/v1/documents</span><span class="d">Upload a scan or a batch with metadata</span></div>
+      <div class="ep"><span class="method m-get">GET</span><span class="path">/api/v1/documents/{id}/status</span><span class="d">Current processing stage and any errors</span></div>
+      <div class="ep"><span class="method m-get">GET</span><span class="path">/api/v1/records/{id}</span><span class="d">Extracted record with per-field confidence</span></div>
+      <div class="ep"><span class="method m-patch">PATCH</span><span class="path">/api/v1/records/{id}/fields</span><span class="d">Submit verifier corrections</span></div>
+      <div class="ep"><span class="method m-post">POST</span><span class="path">/api/v1/records/{id}/approve</span><span class="d">Approve and publish to LRMS</span></div>
+      <div class="ep"><span class="method m-get">GET</span><span class="path">/api/v1/records?district=&amp;tehsil=&amp;village=</span><span class="d">Search validated records by location</span></div>
+      <div class="ep"><span class="method m-get">GET</span><span class="path">/api/v1/stats/progress</span><span class="d">Dashboard metrics by state and district</span></div>
+      <div class="ep"><span class="method m-get">GET</span><span class="path">/api/v1/audit/{recordId}</span><span class="d">Complete change history of a record</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= DASHBOARD ================= -->
+<section class="block" id="dashboard">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">09 · Monitoring</div>
+      <h2>What the dashboard shows</h2>
+      <p>Administrators can track progress and quality from the national level down to a single village.</p>
+    </div>
+    <div class="grid g3">
+      <div class="card kpi"><span class="label">Documents processed</span><p>Totals by day, week, record type and source office.</p></div>
+      <div class="card kpi"><span class="label">Extraction accuracy</span><p>Field-level accuracy measured on verified samples, by language.</p></div>
+      <div class="card kpi"><span class="label">Validation status</span><p>Records passed, failed or pending, broken down by rule.</p></div>
+      <div class="card kpi"><span class="label">Pending verification</span><p>Queue size, ageing of cases and workload per reviewer.</p></div>
+      <div class="card kpi"><span class="label">Error statistics</span><p>The most frequently failing fields, rules and languages.</p></div>
+      <div class="card kpi"><span class="label">Geographic progress</span><p>State-wise and district-wise digitization coverage on a map.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= STACK ================= -->
+<section class="block alt" id="stack">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">10 · Technology</div>
+      <h2>Suggested technology stack</h2>
+      <p>Based on the components suggested in the problem statement, with open-source tools preferred.</p>
+    </div>
+    <div class="grid g4">
+      <div class="card"><h3>Database</h3><div class="tools"><span>PostgreSQL</span><span>PostGIS</span><span>MySQL</span></div></div>
+      <div class="card"><h3>Computer vision</h3><div class="tools"><span>OpenCV</span><span>Detectron2</span><span>YOLO</span></div></div>
+      <div class="card"><h3>OCR &amp; NLP</h3><div class="tools"><span>spaCy</span><span>Hugging Face</span><span>Indic NLP Library</span></div></div>
+      <div class="card"><h3>GIS</h3><div class="tools"><span>GeoServer</span><span>OpenLayers</span><span>Leaflet</span><span>QGIS</span></div></div>
+      <div class="card"><h3>APIs</h3><div class="tools"><span>REST</span><span>GraphQL</span></div></div>
+      <div class="card"><h3>Visualization</h3><div class="tools"><span>Apache Superset</span><span>Grafana</span><span>Plotly</span><span>Power BI</span></div></div>
+      <div class="card"><h3>Cloud</h3><div class="tools"><span>NIC MeghRaj</span><span>AWS GovCloud</span><span>Azure Government</span></div></div>
+      <div class="card"><h3>Notifications</h3><div class="tools"><span>SMS gateway</span><span>Email APIs</span><span>Push</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= EVALUATION ================= -->
+<section class="block" id="evaluation">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">11 · Measuring success</div>
+      <h2>Evaluation metrics</h2>
+      <p>Every claim about the system will be backed by numbers from a locked test set and a field pilot.</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Metric</th><th>What it measures</th><th>How it is measured</th></tr></thead>
+        <tbody>
+          <tr><td>CER / WER</td><td>OCR quality at character and word level</td><td>Against ground truth on the locked test set</td></tr>
+          <tr><td>Field accuracy</td><td>Share of fields extracted exactly right</td><td>Per field, per language and per record type</td></tr>
+          <tr><td>Flagging precision / recall</td><td>Whether low-confidence routing catches real errors</td><td>Errors missed versus unnecessary reviews</td></tr>
+          <tr><td>Auto-approval rate</td><td>Share of records needing no human edits</td><td>Tracked over time as the model learns</td></tr>
+          <tr><td>Time per record</td><td>Speed compared with manual entry</td><td>Timed pilot alongside data-entry operators</td></tr>
+          <tr><td>Duplicate detection</td><td>Conflicting entries correctly found</td><td>Precision and recall on seeded duplicates</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ================= RISKS ================= -->
+<section class="block alt" id="risks">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">12 · Risks</div>
+      <h2>Risks and how we handle them</h2>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Risk</th><th>Mitigation</th></tr></thead>
+        <tbody>
+          <tr><td>Poor handwriting, faded or damaged pages</td><td>Strong preprocessing, confidence scoring and mandatory review of low-confidence fields</td></tr>
+          <tr><td>Different formats in every state</td><td>Layout detection with configurable per-state templates</td></tr>
+          <tr><td>Little labeled training data</td><td>Synthetic data, augmentation and active learning from reviewer corrections</td></tr>
+          <tr><td>Sensitive personal and ownership data</td><td>RBAC, encryption, masking, audit trails and government-cloud hosting</td></tr>
+          <tr><td>Differences between LRMS implementations</td><td>A standard API with state-specific adapter layers</td></tr>
+          <tr><td>Accuracy drop on new record types</td><td>Per-batch accuracy monitoring, scheduled retraining and model rollback</td></tr>
+          <tr><td>Limited reviewer capacity</td><td>A simple review UI, training and workload balancing</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ================= IMPACT ================= -->
+<section class="block" id="impact">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="kicker">13 · Impact</div>
+      <h2>What changes on the ground</h2>
+    </div>
+    <div class="grid g3">
+      <div class="card"><h3>Less manual effort</h3><p>Only uncertain fields reach a person; the rest flows through automatically.</p></div>
+      <div class="card"><h3>Higher accuracy</h3><p>Rules and cross-checks catch errors that manual entry lets through.</p></div>
+      <div class="card"><h3>Faster modernization</h3><p>Legacy archives can be processed in bulk under DILRMP.</p></div>
+      <div class="card"><h3>Stronger ownership verification</h3><p>Linked, validated records help reduce land disputes.</p></div>
+      <div class="card"><h3>Better citizen services</h3><p>Searchable digital records speed up mutations, loans and sales.</p></div>
+      <div class="card"><h3>Transparent governance</h3><p>Live progress and quality metrics for every district.</p></div>
+    </div>
+
+    <h3 class="sub">Stakeholders</h3>
+    <div class="chips">
+      <span>Revenue departments</span><span>Land record offices</span><span>Survey departments</span><span>District administration</span><span>State governments</span><span>Central ministries</span><span>Citizens</span><span>Research institutions</span>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <dl class="ps-meta">
+      <div><dt>Problem statement</dt><dd>26018 · Intelligent Land Record Digitization and Validation System</dd></div>
+      <div><dt>Organization</dt><dd>Ministry of Rural Development</dd></div>
+      <div><dt>Department</dt><dd>Department of Land Resources (DoLR)</dd></div>
+      <div><dt>Category · Theme</dt><dd>Software · Smart Automation</dd></div>
+    </dl>
+    <p class="fine">Solution proposal. All sample records shown on this page are fictional and for illustration only.</p>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var nav=document.querySelector('.nav');
+  var links=[].slice.call(nav.querySelectorAll('a'));
+  if(!('IntersectionObserver' in window))return;
+  var map={};
+  links.forEach(function(a){
+    var href=a.getAttribute('href');
+    if(href && href.startsWith('#')) map[href.slice(1)]=a;
+  });
+  var obs=new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(!e.isIntersecting)return;
+      var a=map[e.target.id]; if(!a)return;
+      links.forEach(function(l){if(l.getAttribute('href').startsWith('#')) l.removeAttribute('aria-current');});
+      a.setAttribute('aria-current','true');
+      var left=a.offsetLeft-nav.clientWidth/2+a.clientWidth/2;
+      try{nav.scrollTo({left:left,behavior:'smooth'});}catch(err){nav.scrollLeft=left;}
+    });
+  },{rootMargin:'-45% 0px -50% 0px'});
+  Object.keys(map).forEach(function(id){var s=document.getElementById(id);if(s)obs.observe(s);});
+})();
+</script>
+</body>
+</html>

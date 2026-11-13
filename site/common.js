@@ -117,7 +117,12 @@ const Store = {
 };
 
 function nav(page) {
-  const links = [["index.html", "Dashboard", "dash"], ["review.html", "Review", "review"], ["search.html", "Search records", "search"]];
+  const links = [
+    ["index.html", "Overview / Proposal", "proposal"],
+    ["workbench.html", "Dashboard", "dash"],
+    ["review.html", "Review", "review"],
+    ["search.html", "Search records", "search"]
+  ];
   document.body.prepend(el("header", {},
     el("div", { class: "brand" }, el("h1", {}, "Land Record Workbench"), el("span", { class: "sub" }, "SIH 26018 prototype · digitize, validate, review")),
     el("nav", {}, links.map(([h, t, p]) => el("a", { href: h, class: p === page ? "active" : "" }, t))),

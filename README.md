@@ -1,186 +1,220 @@
 # 🌾 L.E.A.D — Land Evaluation, Authentication & Digitization
 
-### Intelligent Land Record Digitization, GIS Cross-Verification & Human-in-the-Loop Review Platform
+**Turn degraded land-record scans into validated, GIS-verified digital records, with a person in the loop only where the machine is unsure.**
 
-[![Live Demo on Vercel](https://img.shields.io/badge/Live%20Demo-lead--land--records.vercel.app-black?style=flat&logo=vercel)](https://lead-land-records.vercel.app/)
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688.svg)](https://fastapi.tiangolo.com/)
-[![OpenCV](https://img.shields.io/badge/Image%20Processing-OpenCV-5C3EE8.svg)](https://opencv.org/)
-[![Tesseract OCR](https://img.shields.io/badge/OCR-Tesseract-green.svg)](https://github.com/tesseract-ocr/tesseract)
-[![Tests](https://img.shields.io/badge/Tests-18%20Passed-brightgreen.svg)]()
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-lead--land--records.vercel.app-black?logo=vercel)](https://lead-land-records.vercel.app/)
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
+![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688)
+![OpenCV](https://img.shields.io/badge/Image%20Processing-OpenCV-5C3EE8)
+![Tesseract](https://img.shields.io/badge/OCR-Tesseract-green)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+| | |
+|---|---|
+
+| **Problem Statement ID** | SIH 26018 |
+| **Live demo** | https://lead-land-records.vercel.app/ |
 
 ---
 
-## 📌 Overview
+## 📑 Contents
 
-**L.E.A.D** is an end-to-end prototype engineered for automated digitization and validation of complex historical land records (such as **Jamabandi** registers). 
+[Problem](#-the-problem) · [Solution](#-our-solution) · [Features](#-key-features) · [How it works](#-how-it-works) · [Scoring](#-confidence-scoring--decision-rule) · [Units](#-land-unit-normalization) · [Demo](#-demo-walkthrough) · [Quick start](#-quick-start) · [Config](#-configuration) · [API](#-api) · [Structure](#-project-structure) · [Tests](#-testing) · [Deployment](#-deployment) · [Results](#-results) · [Roadmap](#-limitations--roadmap) · [License](#-license)
 
-Land records are typically degraded, skewed, and recorded in regional measurement systems. **L.E.A.D** restores uploaded scans, extracts tabular ledger entries via OCR, translates regional land units (e.g., *Kanal, Marla, Sarsahi, Karam*) to metric equivalents, cross-references physical records with Cadastral GIS layers, calculates dual-factor confidence scores, and intelligently routes discrepancies to human review queues.
+---
+
+## 🧩 The Problem
+
+Land records such as **Jamabandi** registers are the legal backbone of property ownership, yet most exist only as aged, stained, skewed paper scans. Digitizing them is hard because:
+
+- **Poor scan quality:** fading, stains, uneven lighting, tilted pages and heavy table borders break standard OCR.
+- **Regional measurement systems:** areas are written in Kanal, Marla and Sarsahi, not square metres.
+- **Silent errors:** one misread digit in an area or Khasra number can create a wrong ownership record.
+- **No cross-checking:** ledgers are rarely compared against the cadastral map, so mismatches go unnoticed.
+- **All-or-nothing review:** either everything is checked by hand (slow) or nothing is (unsafe).
+
+## 💡 Our Solution
+
+L.E.A.D is an end-to-end pipeline that **restores** each scan, **extracts** the ledger table with OCR, **normalizes** regional units, **verifies** every row against cadastral GIS polygons, and **scores** how much it trusts each row. High-confidence rows are accepted automatically. Everything else goes to a human reviewer with a plain-language reason for the flag. Every correction is saved as training data to improve the OCR.
 
 ---
 
 ## ✨ Key Features
 
-- **Adaptive Image Preprocessing Pipeline**:
-  - **CLAHE** (Contrast Limited Adaptive Histogram Equalization) for localized contrast enhancement.
-  - **Sauvola Local Thresholding** computed with integral images for binarizing stained or aged parchment.
-  - **Radon / Projection-Profile Deskewing** for precision page alignment.
-  - **Morphological Table Structure Separation** to eliminate ledger border noise before OCR.
-- **Multilingual OCR Engine**:
-  - Word-level confidence mapping with Tesseract OCR supporting script expansion (`eng`, `hin`, `pan`).
-- **Domain-Specific Unit Normalizer**:
-  - Dynamic conversion for Punjabi and North Indian land systems:
-    $$\text{1 Karam} = 5.5\text{ ft}$$
-    $$\text{1 Sarsahi} = 1\text{ sq Karam} \approx 2.81\text{ m}^2$$
-    $$\text{1 Marla} = 9\text{ Sarsahi} \quad | \quad \text{1 Kanal} = 20\text{ Marla} \quad | \quad \text{1 Killa} = 8\text{ Kanal}$$
-- **GIS Cadastral Cross-Validation Engine**:
-  - Automatic cross-checking of Khasra numbers against spatial GeoJSON parcels.
-  - Dual tolerance matching: comparing reported ledger area vs. geometric GIS polygon area ($\le 2\%$ pass, $\le 10\%$ warning).
-- **Dual-Factor Confidence Scoring**:
-  - Combines visual clarity $c_v$ (geometric mean of word confidences) and semantic consistency $c_s$ (weighted business rule checks):
-    $$C = c_v^\alpha \cdot c_s^{(1-\alpha)} \quad (\text{Default } \alpha = 0.5)$$
-- **Human-in-the-Loop Review & Audit Tracking**:
-  - High-confidence records are automatically approved; ambiguous rows are flagged with actionable explanations.
-  - Manual edits are automatically archived to a `hard-examples` dataset for active-learning and OCR fine-tuning.
-- **Interactive Web Interface & Static Demo**:
-  - Full-stack UI with side-by-side original/processed document viewer and parcel inspection.
-  - Standalone serverless static deployment support (`site/`) for GitHub Pages, Vercel, and Firebase.
+| Area | What L.E.A.D does |
+|---|---|
+| **Image restoration** | CLAHE contrast enhancement, Sauvola local thresholding (integral-image implementation), Radon/projection-profile deskewing, morphological removal of table borders |
+| **OCR** | Tesseract with word-level confidence scores; English, Hindi and Punjabi (`eng+hin+pan`) |
+| **Table extraction** | Rule-based column segmentation into Khewat, Khasra, Owner and Area |
+| **Unit normalization** | Kanal–Marla–Sarsahi (plus Karam, Killa) converted to square metres |
+| **GIS cross-validation** | Khasra numbers matched against GeoJSON parcels; ledger area compared with polygon area (≤ 2% pass, ≤ 10% warning) |
+| **Dual confidence score** | Combines OCR clarity and rule-based consistency into one number per row |
+| **Human-in-the-loop review** | Side-by-side original/processed scan viewer, parcel map, inline editing with instant re-validation |
+| **Active-learning data** | Every correction is stored in a `hard-examples` set (OCR read → corrected value → OCR confidence) |
 
 ---
 
-## 🏗️ Architecture & Data Flow
+## 🏗️ How It Works
 
 ```
-┌──────────────┐     ┌───────────────────────┐     ┌─────────────────────┐
-│ Scanned Page │ ──> │ Adaptive Preprocess   │ ──> │ OCR Engine          │
-│ (PDF / Image)│     │ CLAHE + Sauvola + Deskew│    │ Tesseract Word Conf │
-└──────────────┘     └───────────────────────┘     └──────────┬──────────┘
-                                                              │
-┌──────────────────────┐     ┌───────────────────────┐        │
-│ Decision Engine      │ <── │ Cadastral Validation  │ <──────┴──────────┐
-│ Auto-Accept vs Review│     │ GIS Polygon & Units   │  Tabular Extractor│
-└──────────┬───────────┘     └───────────────────────┘  (Khewat, Khasra, │
-           │                                             Owner, Area)    │
-     ┌─────┴───────────────┐                                             │
-     ▼                     ▼                                             │
-┌──────────────┐   ┌───────────────┐                                     │
-│ Auto-Accepted│   │ Review Queue  │ <───────────────────────────────────┘
-│ Records      │   │ (Human-in-loop)
-└──────────────┘   └───────┬───────┘
-                           ▼
-                   ┌───────────────┐
-                   │ Hard Examples │ (Active Learning)
-                   │ Export        │
-                   └───────────────┘
+ Scanned page ──► Preprocess ──► OCR ──► Table extraction ──► Unit normalization
+ (PDF / image)   CLAHE, Sauvola   Tesseract   Khewat, Khasra,     Kanal/Marla/Sarsahi
+                 deskew, grid     + word      Owner, Area         → square metres
+                 removal          confidence
+                                                                        │
+                                                                        ▼
+                    ┌──────────── Decision engine ◄──── GIS + rule validation
+                    │            (auto-accept vs review)   Khasra exists? Area matches?
+                    │
+        ┌───────────┴───────────┐
+        ▼                       ▼
+  Auto-accepted            Review queue ──► Reviewer edits ──► Re-validate
+     records               (with reasons)                          │
+                                                                   ▼
+                                                      Hard-examples dataset
+                                                     (OCR fine-tuning signal)
 ```
+
+**Modules** (`app/`): `preprocess.py` → `ocr.py` → `extract.py` → `units.py` → `geo.py` + `validate.py` → `pipeline.py` (orchestration) → `main.py` (API) → `db.py` (SQLite).
 
 ---
 
-## 🚀 Quick Start Guide
+## 📐 Confidence Scoring & Decision Rule
 
-### Prerequisites
-- **Python 3.10+**
-- **Tesseract OCR**:
-  - **Windows**: Install via [UB-Mannheim Tesseract](https://github.com/UB-Mannheim/tesseract/wiki) and ensure it is added to your system `PATH`.
-  - **macOS**: `brew install tesseract`
-  - **Ubuntu / Debian**: `sudo apt install tesseract-ocr`
+Each row gets two scores:
 
-### 1. Installation
+- **Visual confidence `cv`** is the *geometric mean* of the OCR word confidences in the row, so one badly read word pulls the whole row down.
+- **Semantic confidence `cs`** is the weighted pass rate of the validation rules (valid unit format, Khasra found in GIS, area within tolerance, and so on). A failed **hard** rule sets `cs = 0`.
+
+They combine into the joint confidence:
+
+```
+C = cv^α · cs^(1−α)        (default α = 0.5)
+```
+
+**A row is auto-accepted only if `C ≥ 0.80` and no individual rule scores below 0.5.** Anything else goes to review with the failing rule shown as the reason. `α` and the threshold are configurable (see [Results](#-results) for how they were chosen).
+
+---
+
+## 📏 Land Unit Normalization
+
+Standard Punjab system (Karam length is configurable):
+
+| Unit | Definition | ≈ Metric |
+|---|---|---|
+| 1 Karam | 5.5 ft | 1.676 m |
+| 1 Sarsahi | 1 sq Karam | 2.81 m² |
+| 1 Marla | 9 Sarsahi | 25.29 m² |
+| 1 Kanal | 20 Marla | 505.86 m² |
+| 1 Killa | 8 Kanal | 4,046.9 m² |
+
+Ledger areas are written as **Kanal-Marla-Sarsahi**; for example `10-0-0` = 10 Kanal ≈ 5,058 m².
+
+---
+
+## 🧪 Demo Walkthrough
+
+Open the dashboard and click **Try sample scan**. The demo uses a degraded sample scan and synthetic cadastral polygons.
+
+| Row | Decision | Why | What to do |
+|---|---|---|---|
+| **Khasra 1241** | ⚠️ Needs review | Ledger area `10-0-0` ≈ 5,058 m², GIS polygon ≈ 4,300 m² (outside tolerance) | Edit area to `8-9-6` and save; it re-validates and passes |
+| **Khasra 1250** | ❌ Needs review (hard fail) | Khasra not found in the cadastral layer | Flag for field-surveyor verification |
+| **Low-confidence name** | ⚠️ Needs review | Damaged text read as *"Harhans"* (low word confidence) | Correct the name; saved to `/api/hard-examples` |
+| **Clean rows** | ✅ Auto-accepted | High OCR confidence and all rules pass | Nothing, automatically indexed |
+
+> **Static vs. full demo:** the hosted Vercel site (`site/`) runs in the browser using **precomputed OCR results** to demonstrate review, editing, parcel search and re-validation. Uploading *new* scans runs the real OCR pipeline through the local FastAPI backend (`python run.py`).
+
+---
+
+## 🚀 Quick Start
+
+**Prerequisites:** Python 3.10+ and Tesseract OCR (install the `hin` and `pan` language data for Hindi/Punjabi).
+
+- Windows: [UB-Mannheim build](https://github.com/UB-Mannheim/tesseract/wiki), then add it to `PATH`
+- macOS: `brew install tesseract`
+- Ubuntu/Debian: `sudo apt install tesseract-ocr`
 
 ```bash
-# Clone the repository
 git clone https://github.com/thyravikant/L.E.A.D.git
 cd L.E.A.D
 
-# Set up virtual environment
 python -m venv .venv
+# Windows (PowerShell):  .venv\Scripts\Activate.ps1
+# Linux / macOS:         source .venv/bin/activate
 
-# Activate virtual environment
-# Windows (PowerShell):
-.venv\Scripts\Activate.ps1
-# Windows (cmd):
-.venv\Scripts\activate.bat
-# Linux / macOS:
-source .venv/bin/activate
-
-# Install dependencies
 pip install -r requirements.txt
-```
-
-> **Tip for Linux / macOS / Git Bash:** You can also run `./ps.sh` for an automated setup and run.
-
-### 2. Launch the Application
-
-```bash
 python run.py
 ```
-- **Web App**: Open [http://127.0.0.1:8000](http://127.0.0.1:8000)
-- **Interactive Swagger API Docs**: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
-- **ReDoc Documentation**: [http://127.0.0.1:8000/redoc](http://127.0.0.1:8000/redoc)
+
+On Linux, macOS or Git Bash you can run `./ps.sh` instead for automated setup and launch.
+
+| URL | What |
+|---|---|
+| http://127.0.0.1:8000 | Web app |
+| http://127.0.0.1:8000/docs | Swagger API docs |
+| http://127.0.0.1:8000/redoc | ReDoc |
 
 ---
 
-## 🧪 Testing Scenarios in the Demo
+## ⚙️ Configuration
 
-Click **"Try sample scan"** on the dashboard to test the built-in demo records:
-
-| Khasra | System Decision | Trigger / Cause | Resolution Action |
-|:---:|:---:|:---|:---|
-| **1241** | ⚠️ Needs Review | Area mismatch: ledger specifies `10-0-0` (5,058 m²), while GIS cadastral polygon calculates 4,300 m². | Edit ledger area to `8-9-6` and click save. System re-validates and passes. |
-| **1250** | ❌ Needs Review (Hard Fail) | Spatial mismatch: Khasra number is not present in the cadastral GIS layer. | Mark for manual field surveyor verification or spatial update. |
-| **OCR Low-Conf** | ⚠️ Needs Review | Low word-level confidence (e.g. damaged name reading like *"Harhans"*). | Correct name in reviewer modal; saved automatically to `/api/hard-examples`. |
-| **Clean Rows** | ✅ Auto-Accepted | High optical confidence ($c_v \ge 0.85$) and passed all semantic GIS validation rules. | Automatically indexed. |
-
----
-
-## ⚙️ Configuration Reference
-
-Configure platform behavior using environment variables:
+Set as environment variables:
 
 | Variable | Default | Description |
-|:---|:---:|:---|
-| `LR_OCR_LANGS` | `eng` | Tesseract language codes (e.g., `eng+hin+pan`). |
-| `LR_KARAM_FT` | `5.5` | Defined length of Karam in feet (standard Punjab = 5.5 ft). |
-| `LR_ALPHA` | `0.5` | Weight balance factor between visual ($\alpha$) and semantic ($1-\alpha$) confidence. |
-| `LR_AUTO_THRESHOLD` | `0.80` | Minimum aggregate confidence score required for auto-approval. |
-| `LR_FIELD_CONF_OK` | `0.85` | Per-field optical confidence baseline. |
-| `LR_DATA_DIR` | `./data` | File storage path for SQLite database, GeoJSON, and upload artifacts. |
-| `HOST` / `PORT` | `127.0.0.1` / `8000` | Host address and port for the FastAPI web server. |
+|---|---|---|
+| `LR_OCR_LANGS` | `eng` | Tesseract languages, e.g. `eng+hin+pan` |
+| `LR_KARAM_FT` | `5.5` | Length of a Karam in feet |
+| `LR_ALPHA` | `0.5` | Weight of visual vs. semantic confidence |
+| `LR_AUTO_THRESHOLD` | `0.80` | Minimum joint confidence for auto-accept |
+| `LR_FIELD_CONF_OK` | `0.85` | Per-field OCR confidence baseline |
+| `LR_DATA_DIR` | `./data` | SQLite DB, GeoJSON and upload storage |
+| `HOST` / `PORT` | `127.0.0.1` / `8000` | Server bind address |
 
 ---
 
-## 📂 Repository Structure
+## 🔌 API
 
-```plaintext
+Interactive docs are served at `/docs`. Main capabilities:
+
+- Upload a scan and run the full pipeline
+- List records with their decision status and reasons
+- Edit a field and re-validate the row
+- `GET /api/hard-examples`: export reviewer corrections as training data
+
+_Replace this list with the exact endpoints from `app/main.py`._
+
+---
+
+## 📂 Project Structure
+
+```
 L.E.A.D/
-├── .github/workflows/    # CI/CD and GitHub Pages deployment actions
-├── app/                  # FastAPI backend source
-│   ├── config.py         # Global configuration & environment settings
-│   ├── db.py             # SQLite database models & query operations
-│   ├── extract.py        # Tabular rule parser & column segmenter
-│   ├── geo.py            # Spatial GIS layer parser & polygon area calculator
-│   ├── main.py           # FastAPI REST routes & request handlers
-│   ├── ocr.py            # Tesseract OCR invocation & bounding box mapper
-│   ├── pipeline.py       # Orchestration pipeline (Image -> OCR -> Validate)
-│   ├── preprocess.py     # Image filters (Sauvola, CLAHE, Deskew, Grid cleaning)
-│   ├── seed.py           # Synthetic cadastral parcel generator
-│   ├── units.py          # Regional land unit conversion logic
-│   └── validate.py       # Deterministic business rule validation engine
-├── samples/              # Degraded test scans & synthetic generator (make_sample.py)
-├── site/                 # Standalone static showcase (GitHub Pages / Firebase)
-├── static/               # Dynamic web app assets (HTML, CSS, JS)
-├── tests/                # Automated pytest validation suite
-├── firebase.json         # Firebase hosting configuration
-├── requirements.txt      # Python dependencies
-└── run.py                # Server launcher script
+├── .github/workflows/   # CI and deployment
+├── app/                 # FastAPI backend
+│   ├── config.py        # Settings and environment variables
+│   ├── db.py            # SQLite models and queries
+│   ├── extract.py       # Table parsing and column segmentation
+│   ├── geo.py           # GeoJSON parsing and polygon area
+│   ├── main.py          # REST routes
+│   ├── ocr.py           # Tesseract wrapper with word confidences
+│   ├── pipeline.py      # Image → OCR → validate orchestration
+│   ├── preprocess.py    # CLAHE, Sauvola, deskew, grid removal
+│   ├── seed.py          # Synthetic cadastral parcel generator
+│   ├── units.py         # Land unit conversion
+│   └── validate.py      # Rule engine and scoring
+├── samples/             # Degraded test scans and generator (make_sample.py)
+├── site/                # Static demo (Vercel / Pages / Firebase)
+├── static/              # Web app assets (HTML, CSS, JS)
+├── tests/               # pytest suite
+├── firebase.json
+├── requirements.txt
+└── run.py
 ```
 
 ---
 
-## 🧪 Running Automated Tests
-
-Run the full test suite with:
+## ✅ Testing
 
 ```bash
 python -m pytest -v
@@ -188,20 +222,53 @@ python -m pytest -v
 
 ---
 
-## 🌐 Live Demo & Deployment
+## 🌐 Deployment
 
-🚀 **Live Showcase**: **[lead-land-records.vercel.app](https://lead-land-records.vercel.app/)**
+| Target | How |
+|---|---|
+| **Vercel** (live) | Project root directory set to `site/` |
+| **GitHub Pages** (optional) | `.github/workflows/pages.yml`; requires Settings → Pages → Source: GitHub Actions |
+| **Firebase Hosting** (optional) | `firebase deploy --only hosting` |
+| **Full backend** | `python run.py` on any machine with Python and Tesseract |
 
-The static interactive preview (`site/`) is live and ready to run without backend dependencies (client-side verification with precomputed OCR results & local storage):
+---
 
-- **Vercel**: Deployed at [lead-land-records.vercel.app](https://lead-land-records.vercel.app/) with Root Directory set to `site/`.
-- **GitHub Pages**: Automated via `.github/workflows/pages.yml`.
-- **Firebase Hosting**: Configured via `firebase.json` (`firebase deploy --only hosting`).
+## 📈 Results
 
-> 💡 **Full Features vs. Static Demo**: The live Vercel showcase demonstrates record review, inline discrepancy corrections, interactive parcel search, and re-validation in the browser. Uploading custom unread scans and generating new OCR models runs via the local FastAPI backend (`python run.py`).
+_Fill in with your own measurements before submission._
+
+| Metric | Value |
+|---|---|
+| OCR word accuracy, raw scan | _x %_ |
+| OCR word accuracy, after preprocessing | _y %_ |
+| Rows auto-accepted | _z %_ |
+| Precision of auto-accepted rows | _p %_ |
+| Errors caught by GIS check that OCR confidence alone missed | _n_ |
+| Average time per page | _t s_ |
+| Sample set | _N pages, source, degradation type_ |
+
+**Threshold choice:** _explain how `α = 0.5` and `0.80` were selected, for example by sweeping thresholds on the sample set._
+
+---
+
+## 🚧 Limitations & Roadmap
+
+**Current limitations**
+- The hosted demo uses precomputed OCR and **synthetic** cadastral polygons.
+- Unit rules target the Punjab Kanal–Marla–Sarsahi system.
+- Table extraction is rule-based and tuned to Jamabandi-style layouts.
+- Hindi/Punjabi accuracy depends on Tesseract language models and scan quality.
+
+**Roadmap**
+- [ ] Import real state cadastral GeoJSON/shapefiles
+- [ ] Fine-tune OCR using the exported hard examples
+- [ ] Support more states and unit systems
+- [ ] Layout-aware detection of merged and handwritten cells
+- [ ] Batch processing and reviewer assignment queue
+- [ ] Role-based access and full audit trail
 
 ---
 
 ## 📄 License
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+Released under the [MIT License](LICENSE).
